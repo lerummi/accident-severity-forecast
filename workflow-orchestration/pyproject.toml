@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "workflow-orchestration"
+version = "0.1.0"
+description = ""
+authors = ["lerummi <martin.krause.85@gmx.de>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "workflows"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.0.3"
+pyarrow = "^12.0.1"
+dagster = "^1.4.2"
+dagster-graphql = "^1.4.2"
+dagit = "^1.4.2"
+dagster-postgres = "^0.20.2"
+openpyxl = "^3.1.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
