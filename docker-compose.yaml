@@ -46,6 +46,7 @@ services:
       - net
     depends_on:
       - dagster_storage
+    profiles: ["workflow-orchestration"]
 
   # This service runs the dagster-daemon process, which is responsible for taking runs
   # off of the queue and launching them, as well as creating runs from schedules or sensors.
@@ -71,6 +72,30 @@ services:
       - net
     depends_on:
       - dagster_storage
+    profiles: ["workflow-orchestration"]
+
+  jupyterlab:
+    build:
+      context: model-training
+      dockerfile: Dockerfile
+    ports:
+      - 8888:8888
+    volumes:
+      - "./data:/home/jovyan/data"
+      - "./config:/home/jovyan/config"
+      - "./model-training-registry/mlartifacts:/mlartifacts"
+      - "./notebooks:/home/jovyan/work"
+    environment:
+      - PYTHONPATH=$PYTHONPATH:/home/jovyan/work/
+      - DATA_DIR=/home/jovyan/data
+      - STORAGE_DIR=/home/jovyan/data/storage
+      - CONFIG_DIR=/home/jovyan/config
+      - JUPYTER_ENABLE_LAB=yes
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    entrypoint: start-notebook.sh --NotebookApp.token="" --NotebookApp.notebook_dir=/home/jovyan/work
+    networks:
+      - net
+    profiles: ["model-training"]
 
 networks:
   net:

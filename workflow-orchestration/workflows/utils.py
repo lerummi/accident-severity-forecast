@@ -42,3 +42,10 @@ def load_yaml(yamlfile: Union[Path, str]):
         yamlfile = Path(str)
 
     return yaml.safe_load(yamlfile.read_text())
+
+
+def fillna_categorical(X: pandas.DataFrame):
+    for column in X:
+        if X[column].dtype == object:
+            X[column] = X[column].fillna("None")
+    return X

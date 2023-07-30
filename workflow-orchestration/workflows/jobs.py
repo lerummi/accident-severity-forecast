@@ -21,3 +21,5 @@ def process_accidents():
 
     X = accidents.accidents_vehicles_casualties_unify(X, mapping_df)
 
+    X = accidents.accidents_vehicles_casualties_dataset(X)
+

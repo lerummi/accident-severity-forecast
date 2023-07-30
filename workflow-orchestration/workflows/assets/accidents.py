@@ -6,11 +6,15 @@ from pathlib import Path
 from dagster import asset
 from dagster import get_dagster_logger
 
-from workflows.utils import runcmd, load_yaml, is_numeric_or_datelike
+from workflows.utils import (
+    runcmd, 
+    load_yaml,
+    fillna_categorical
+)
 
 data_dir = Path(os.environ["DATA_DIR"])
 base_url = "https://data.dft.gov.uk/road-accidents-safety-data"
-years = range(2016, 2022)
+years = range(2016, 2017)
 
 categorization = load_yaml(
     Path(os.environ["CONFIG_DIR"]) / "categorization.yaml"
@@ -281,3 +285,87 @@ def accidents_vehicles_casualties_unify(
     )
 
     return X
+
+
+@asset(group_name="normalize_and_clean")
+def accidents_vehicles_casualties_dataset(
+    accidents_vehicles_casualties_unify: pandas.DataFrame
+) -> pandas.DataFrame:
+    
+    X = accidents_vehicles_casualties_unify
+    X = X.set_index("accident.accident_index")
+
+    # Define target, i.e. casualty severity level
+    X["target"] = (
+        X
+        .pop("casualty.casualty_severity")
+        .replace(
+            {
+                np.nan: 0, 
+                "Slight": 1, 
+                "Serious": 2, 
+                "Fatal": 3
+            }
+        )
+    )
+    X = X.loc[:, ~X.columns.str.startswith("casualty.")]
+    X = X.drop_duplicates()
+
+    n_vehicles = X.groupby(level=0)["vehicle.vehicle_reference"].nunique()
+    X["accident.n_vehicles"] = np.nan
+    X["accident.n_vehicles"].loc[n_vehicles.index] = n_vehicles.loc[
+        n_vehicles.index
+    ]
+
+    # Columns in training dataset
+    columns = (
+        categorization["spatiotemporal_properties"] + 
+        categorization["vehicle_properties"] + 
+        categorization["environmental_properties"] +
+        ["accident.n_vehicles", "target"]
+    )
+    X = X[columns]
+
+    # Make vehicle columns categorical, so we can multiple vehicle properties
+    # one row
+    for column in ["vehicle.engine_capacity_cc", "vehicle.age_of_vehicle"]:
+        X[column] = pandas.qcut(
+            X[column],
+            10,
+            labels=list(
+                map(
+                    lambda x: f"{column}#{x}", range(10)
+                )
+            )
+        ).astype(object)
+
+    # Transform data(-time) columns
+    X["accident.year"] = X["accident.date"].dt.year
+    X["accident.month"] = X["accident.date"].dt.year
+    X["accident.weekday"] = X["accident.date"].dt.dayofweek
+    X["accident.hour"] = X["accident.time"].dt.total_seconds() / 60 / 60
+
+    X.pop("accident.date")
+    X.pop("accident.time")
+
+    X = fillna_categorical(X)
+
+    # Group-agg by accident_index: 
+    # Vehicle columns are simply summerized, such that strings (possibly iden-
+    # tifying categories) are concatenated
+    # Other columns are unique anyway
+    # Target column is summarized to mimic a total accident severity score
+    vehicle_columns = X.columns[X.columns.str.startswith("vehicle.")]
+    other_columns = [
+        column for column in X 
+        if column not in vehicle_columns and column != "target"
+    ]
+
+    agg = {
+        **{column: " ".join for column in vehicle_columns},
+        **{column: "first" for column in other_columns},
+        **{"target": "sum"}
+    }
+
+    X = fillna_categorical(X)
+    return X.groupby(level=0).agg(agg)

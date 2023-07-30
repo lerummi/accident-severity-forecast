@@ -27,6 +27,7 @@ build-compose: ## Run composition locally
 	docker-compose build $(DARGS)
 
 ##@ Build and run stack
+run-compose: CARGS?=
 run-compose: ## Run composition locally
-	docker-compose up --build
+	docker-compose $(CARGS) up --build
 
