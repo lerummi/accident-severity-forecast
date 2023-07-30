@@ -18,7 +18,7 @@ def load_yaml(yamlfile: Union[Path, str]):
     return yaml.safe_load(yamlfile.read_text())
 
 
-def infer_catboost_feature_types(X: pandas.DataFrame, max_categorical_nunique: int = 6):
+def infer_catboost_feature_types(X: pandas.DataFrame, max_categorical_nunique: int = 10):
     
     categorical = []
     text = []

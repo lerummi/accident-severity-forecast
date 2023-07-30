@@ -12,6 +12,7 @@ services:
       POSTGRES_DB: "postgres_db"
     networks:
       - net
+    profiles: ["workflow-orchestration"]
 
   # This service runs dagit, which loads your user code from the user code container.
   # Since our instance uses the QueuedRunCoordinator, any runs submitted from dagit will be put on
@@ -83,7 +84,7 @@ services:
     volumes:
       - "./data:/home/jovyan/data"
       - "./config:/home/jovyan/config"
-      - "./model-training-registry/mlartifacts:/mlartifacts"
+      - "./model-tracking-registry/mlartifacts:/mlartifacts"
       - "./notebooks:/home/jovyan/work"
     environment:
       - PYTHONPATH=$PYTHONPATH:/home/jovyan/work/
@@ -96,6 +97,19 @@ services:
     networks:
       - net
     profiles: ["model-training"]
+
+  mlflow:
+    build:
+      context: model-tracking-registry
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    volumes:
+      - "./model-tracking-registry/mlruns:/mlruns"
+      - "./model-tracking-registry/mlartifacts:/mlartifacts"
+    networks:
+      - net
+    profiles: ["model-training", "workflow-orchestration"]
 
 networks:
   net:

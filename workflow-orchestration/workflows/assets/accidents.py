@@ -14,7 +14,7 @@ from workflows.utils import (
 
 data_dir = Path(os.environ["DATA_DIR"])
 base_url = "https://data.dft.gov.uk/road-accidents-safety-data"
-years = range(2016, 2017)
+years = range(2016, 2022)
 
 categorization = load_yaml(
     Path(os.environ["CONFIG_DIR"]) / "categorization.yaml"
