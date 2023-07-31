@@ -22,12 +22,13 @@ help: ## display this help
 	@printf "\n"
 
 ##@ Build stack
+build-compose: CARGS?=--profile all
 build-compose: DARGS?=--no-cache
 build-compose: ## Run composition locally
-	docker-compose build $(DARGS)
+	docker-compose $(CARGS) build $(DARGS)
 
 ##@ Build and run stack
-run-compose: CARGS?=
+run-compose: CARGS?=--profile all
 run-compose: ## Run composition locally
 	docker-compose $(CARGS) up --build
 

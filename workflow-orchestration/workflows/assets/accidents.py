@@ -1,9 +1,11 @@
 import os
 import pandas
 import numpy as np
+from typing import Dict
 from pathlib import Path
 
 from dagster import asset
+from dagster import StaticPartitionsDefinition
 from dagster import get_dagster_logger
 
 from workflows.utils import (
@@ -14,147 +16,155 @@ from workflows.utils import (
 
 data_dir = Path(os.environ["DATA_DIR"])
 base_url = "https://data.dft.gov.uk/road-accidents-safety-data"
-years = range(2016, 2022)
+years = list(np.arange(2016, 2022).astype(str))
 
 categorization = load_yaml(
     Path(os.environ["CONFIG_DIR"]) / "categorization.yaml"
 )
 
 
-@asset(group_name="downloaded")
-def raw_accidents() -> pandas.DataFrame:
+@asset(
+    partitions_def=StaticPartitionsDefinition(years),
+    group_name="1_download_source_datasets",
+    io_manager_key="partitioned_io_manager"
+)
+def raw_accidents(context) -> pandas.DataFrame:
     """Download accidents from https://data.dft.gov.uk (from 2016)."""
 
     logger = get_dagster_logger()
+    year = context.asset_partition_key_for_output()
 
     output_dir = data_dir / "raw"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    data = []
-    for year in years:
-        filename = "/".join(
-                [
-                    base_url,
-                    f"dft-road-casualty-statistics-accident-{year}.csv"
-                ]
-        )
+    filename = "/".join(
+            [
+                base_url,
+                f"dft-road-casualty-statistics-accident-{year}.csv"
+            ]
+    )
 
-        output_file = output_dir / f"accidents-{year}.csv"
+    output_file = output_dir / f"accidents-{year}.csv"
 
-        logger.info(f"Running wget -v {filename} -O {output_file}")
-        std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
-        logger.info(f"StdOut message: {std_out}")
-        logger.info(f"StdErr message: {std_err}")
+    logger.info(f"Running wget -v {filename} -O {output_file}")
+    std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
+    logger.info(f"StdOut message: {std_out}")
+    logger.info(f"StdErr message: {std_err}")
 
-        data.append(
-            pandas.read_csv(
-                output_file,
-                low_memory=False
-            )
-        )
-
-    return pandas.concat(data, axis=0)
+    return pandas.read_csv(
+        output_file,
+        low_memory=False
+    )
 
 
-@asset(group_name="downloaded")
-def raw_vehicles() -> pandas.DataFrame:
+@asset(
+    partitions_def=StaticPartitionsDefinition(years),
+    group_name="1_download_source_datasets",
+    io_manager_key="partitioned_io_manager"
+)
+def raw_vehicles(context) -> pandas.DataFrame:
     """Download vehicles from https://data.dft.gov.uk (from 2016)."""
 
     logger = get_dagster_logger()
+    year = context.asset_partition_key_for_output()
 
     output_dir = data_dir / "raw"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    data = []
-    for year in years:
-        filename = "/".join(
-                [
-                    base_url,
-                    f"dft-road-casualty-statistics-vehicle-{year}.csv"
-                ]
-        )
+    filename = "/".join(
+            [
+                base_url,
+                f"dft-road-casualty-statistics-vehicle-{year}.csv"
+            ]
+    )
 
-        output_file = output_dir / f"vehicle-{year}.csv"
+    output_file = output_dir / f"vehicle-{year}.csv"
 
-        logger.info(f"Running wget -v {filename} -O {output_file}")
-        std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
-        logger.info(f"StdOut message: {std_out}")
-        logger.info(f"StdErr message: {std_err}")
+    logger.info(f"Running wget -v {filename} -O {output_file}")
+    std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
+    logger.info(f"StdOut message: {std_out}")
+    logger.info(f"StdErr message: {std_err}")
 
-        data.append(
-            pandas.read_csv(
-                output_file,
-                low_memory=False
-            )
-        )
-
-    return pandas.concat(data, axis=0)
+    return pandas.read_csv(
+        output_file,
+        low_memory=False
+    )
 
 
-@asset(group_name="downloaded")
-def raw_casualties() -> pandas.DataFrame:
+@asset(
+    partitions_def=StaticPartitionsDefinition(years),
+    group_name="1_download_source_datasets",
+    io_manager_key="partitioned_io_manager"
+)
+def raw_casualties(context) -> pandas.DataFrame:
     """Download casualties from https://data.dft.gov.uk (from 2016)."""
 
     logger = get_dagster_logger()
+    year = context.asset_partition_key_for_output()
 
     output_dir = data_dir / "raw"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    data = []
-    for year in years:
-        filename = "/".join(
-                [
-                    base_url,
-                    f"dft-road-casualty-statistics-casualty-{year}.csv"
-                ]
-        )
+    filename = "/".join(
+            [
+                base_url,
+                f"dft-road-casualty-statistics-casualty-{year}.csv"
+            ]
+    )
 
-        output_file = output_dir / f"casualty-{year}.csv"
+    output_file = output_dir / f"casualty-{year}.csv"
 
-        logger.info(f"Running wget -v {filename} -O {output_file}")
-        std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
-        logger.info(f"StdOut message: {std_out}")
-        logger.info(f"StdErr message: {std_err}")
+    logger.info(f"Running wget -v {filename} -O {output_file}")
+    std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
+    logger.info(f"StdOut message: {std_out}")
+    logger.info(f"StdErr message: {std_err}")
 
-        data.append(
-            pandas.read_csv(
-                output_file,
-                low_memory=False
-            )
-        )
-
-    return pandas.concat(data, axis=0)
+    return pandas.read_csv(
+        output_file,
+        low_memory=False
+    )
 
 
-@asset(group_name="merged")
+@asset(
+    partitions_def=StaticPartitionsDefinition(years),
+    group_name="2_merge_downloaded_datasets",
+    io_manager_key="partitioned_io_manager"
+)
 def accidents_vehicles_merged(
-    accidents: pandas.DataFrame, 
-    vehicles: pandas.DataFrame
+    context,
+    raw_accidents: pandas.DataFrame, 
+    raw_vehicles: pandas.DataFrame
     ) -> pandas.DataFrame:
     """
     Merged accidents and vehicles.
     """
 
-    X = accidents.add_prefix("accident.")
+    X = raw_accidents.add_prefix("accident.")
 
     return X.merge(
-        vehicles.add_prefix("vehicle."), 
+        raw_vehicles.add_prefix("vehicle."), 
         how="left",
         left_on="accident.accident_index",
         right_on="vehicle.accident_index"
     )
 
-@asset(group_name="merged")
+
+@asset(
+    partitions_def=StaticPartitionsDefinition(years),
+    group_name="2_merge_downloaded_datasets",
+    io_manager_key="partitioned_io_manager"
+)
 def accidents_vehicles_casualties_merged(
-    accidents_vehicles: pandas.DataFrame, 
-    casualties: pandas.DataFrame
+    context,
+    accidents_vehicles_merged: pandas.DataFrame, 
+    raw_casualties: pandas.DataFrame
 ) -> pandas.DataFrame:
     """
     Merged accidents, vehicles and casualties. Duplicate columns dropped.
     """
 
-    X = accidents_vehicles.merge(
-        casualties.add_prefix("casualty."),
+    X = accidents_vehicles_merged.merge(
+        raw_casualties.add_prefix("casualty."),
         how="left",
         left_on=["vehicle.accident_index", "vehicle.vehicle_reference"],
         right_on=["casualty.accident_index", "casualty.vehicle_reference"]
@@ -176,8 +186,11 @@ def accidents_vehicles_casualties_merged(
     return X
 
 
-@asset(group_name="downloaded")
-def categorical_mapping() -> pandas.DataFrame:
+@asset(
+    group_name="1_download_source_datasets",
+    io_manager_key="pandas_io_manager"
+)
+def categorical_mapping(context) -> pandas.DataFrame:
     """
     Mapping of id in accident, vehicle and casualty data to labels."""
 
@@ -205,14 +218,20 @@ def categorical_mapping() -> pandas.DataFrame:
         "." + 
         mapping["field name"]
     )
+    mapping["code/format"] = mapping["code/format"].astype(str)
 
     return mapping
 
 
-@asset(group_name="normalize_and_clean")
+@asset(
+    partitions_def=StaticPartitionsDefinition(years),
+    group_name="3_apply_preprocessing",
+    io_manager_key="partitioned_io_manager"
+)
 def accidents_vehicles_casualties_unify(
-    accidents_vehicles_casualties_ids: pandas.DataFrame,
-    mapping: pandas.DataFrame
+    context,
+    accidents_vehicles_casualties_merged: pandas.DataFrame,
+    categorical_mapping: pandas.DataFrame
 ) -> pandas.DataFrame:
     """
     Replace ids by labels: Combination of accidents, vehicles and casualties.
@@ -225,7 +244,7 @@ def accidents_vehicles_casualties_unify(
     decode_mapping = {}
 
     mapping_groupby = (
-        mapping
+        categorical_mapping
         .dropna(subset="label", how="any")
         .groupby("field name")
         [["code/format", "label"]]
@@ -245,7 +264,7 @@ def accidents_vehicles_casualties_unify(
 
     logger.info(f"Using the following decode_mapping: {decode_mapping}")
 
-    X = accidents_vehicles_casualties_ids
+    X = accidents_vehicles_casualties_merged
     for k, column in enumerate(X.columns):
         if column in decode_mapping:
             logger.info(f"Decoding column: {column}")
@@ -287,10 +306,18 @@ def accidents_vehicles_casualties_unify(
     return X
 
 
-@asset(group_name="normalize_and_clean")
-def accidents_vehicles_casualties_dataset(
+@asset(
+    partitions_def=StaticPartitionsDefinition(years),
+    group_name="3_apply_preprocessing",
+    io_manager_key="partitioned_io_manager"
+)
+def accidents_vehicles_casualties_preprocessed(
+    context,
     accidents_vehicles_casualties_unify: pandas.DataFrame
 ) -> pandas.DataFrame:
+    """
+    Apply preprocessing on dataset to enable machine learning model application.
+    """
     
     X = accidents_vehicles_casualties_unify
     X = X.set_index("accident.accident_index")
@@ -360,6 +387,8 @@ def accidents_vehicles_casualties_dataset(
         column for column in X 
         if column not in vehicle_columns and column != "target"
     ]
+    for column in vehicle_columns:
+        X[column] = X[column].astype(str)
 
     agg = {
         **{column: " ".join for column in vehicle_columns},
@@ -368,4 +397,22 @@ def accidents_vehicles_casualties_dataset(
     }
 
     X = fillna_categorical(X)
+
     return X.groupby(level=0).agg(agg)
+
+
+# @asset(
+#     group_name="3_apply_preprocessing",
+#     io_manager_key="pandas_io_manager"
+# )
+# def accidents_vehicles_casualties_dataset(
+#     accidents_vehicles_casualties_preprocessed: Dict[str, pandas.DataFrame]
+# ) -> pandas.DataFrame:
+#     """
+#     Merge partitions into single data asset.
+#     """
+    
+#     return pandas.concat(
+#         accidents_vehicles_casualties_preprocessed.values(),
+#         axis=0
+#     )

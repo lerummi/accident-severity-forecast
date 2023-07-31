@@ -1,10 +1,19 @@
 from dagster import Definitions
-from workflows.jobs import process_accidents
+from dagster import load_assets_from_modules
 
-from workflows.io import PandasIOManager
+from workflows.assets import accidents
+
+from workflows.io import PandasIOManager, PartionedPandasIOManager
 
 
 defs = Definitions(
-    jobs=[process_accidents],
-    resources={"io_manager": PandasIOManager()}
+    assets=load_assets_from_modules(
+        modules=[
+            accidents
+        ],
+    ),
+    resources={
+        "partitioned_io_manager": PartionedPandasIOManager(),
+        "pandas_io_manager": PandasIOManager()
+    }
 )

@@ -1,3 +1,4 @@
+import os
 import pandas
 from pandas.api.types import (
     is_numeric_dtype,
@@ -34,3 +35,22 @@ def infer_catboost_feature_types(X: pandas.DataFrame, max_categorical_nunique: i
         "categorical": categorical, 
         "text": text
     }
+
+def read_partitioned_pandas_asset(asset: str) -> pandas.DataFrame:
+    """
+    Read all partitions associcated with a specific asset and concatenate
+    to pandas.DataFrame
+    """
+
+    assets_dir = Path(os.environ["DATA_DIR"]) / "assets"
+
+    directory = assets_dir / asset
+    if not directory.exists():
+        raise IOError(
+            f"Apparently and asset '{asset}' is not available in the storage "
+            f"directory {assets_dir}"
+        )
+
+    return pandas.concat(
+        pandas.read_parquet(file) for file in directory.glob("**/*.parquet")
+    )

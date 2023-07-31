@@ -5,14 +5,13 @@ services:
   # and event log storage.
   dagster_storage:
     image: postgres:13
-    container_name: dagster_storage
     environment:
       POSTGRES_USER: "postgres_user"
       POSTGRES_PASSWORD: "postgres_password"
       POSTGRES_DB: "postgres_db"
     networks:
       - net
-    profiles: ["workflow-orchestration"]
+    profiles: ["workflow-orchestration", "all"]
 
   # This service runs dagit, which loads your user code from the user code container.
   # Since our instance uses the QueuedRunCoordinator, any runs submitted from dagit will be put on
@@ -37,17 +36,17 @@ services:
       DAGSTER_POSTGRES_USER: "postgres_user"
       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
       DAGSTER_POSTGRES_DB: "postgres_db"
-      DATA_DIR: "/opt/dagster/dagster_home/data"
+      DATA_DIR: "/opt/dagster/dagster_home/storage"
       CONFIG_DIR: "/opt/dagster/dagster_home/workflows/config"
     volumes: # Make docker client accessible so we can terminate containers from dagit
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
-      - "./data:/opt/dagster/dagster_home/data"
+      - "./data:/opt/dagster/dagster_home/storage"
     networks:
       - net
     depends_on:
       - dagster_storage
-    profiles: ["workflow-orchestration"]
+    profiles: ["workflow-orchestration", "all"]
 
   # This service runs the dagster-daemon process, which is responsible for taking runs
   # off of the queue and launching them, as well as creating runs from schedules or sensors.
@@ -63,17 +62,17 @@ services:
       DAGSTER_POSTGRES_USER: "postgres_user"
       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
       DAGSTER_POSTGRES_DB: "postgres_db"
-      DATA_DIR: "/opt/dagster/dagster_home/data"
+      DATA_DIR: "/opt/dagster/dagster_home/storage"
       CONFIG_DIR: "/opt/dagster/dagster_home/workflows/config"
     volumes: # Make docker client accessible so we can launch containers using host docker
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
-      - "./data:/opt/dagster/dagster_home/data"
+      - "./data:/opt/dagster/dagster_home/storage"
     networks:
       - net
     depends_on:
       - dagster_storage
-    profiles: ["workflow-orchestration"]
+    profiles: ["workflow-orchestration", "all"]
 
   jupyterlab:
     build:
@@ -96,7 +95,7 @@ services:
     entrypoint: start-notebook.sh --NotebookApp.token="" --NotebookApp.notebook_dir=/home/jovyan/work
     networks:
       - net
-    profiles: ["model-training"]
+    profiles: ["model-training", "all"]
 
   mlflow:
     build:
@@ -109,7 +108,7 @@ services:
       - "./model-tracking-registry/mlartifacts:/mlartifacts"
     networks:
       - net
-    profiles: ["model-training", "workflow-orchestration"]
+    profiles: ["model-training", "workflow-orchestration", "all"]
 
 networks:
   net:
