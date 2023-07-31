@@ -42,6 +42,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
       - "./data:/opt/dagster/dagster_home/storage"
+      - "./notebooks:/opt/dagster/dagster_home/notebooks"
     networks:
       - net
     depends_on:
@@ -68,16 +69,17 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /tmp/io_manager_storage:/tmp/io_manager_storage
       - "./data:/opt/dagster/dagster_home/storage"
+      - "./notebooks:/opt/dagster/dagster_home/notebooks"
     networks:
       - net
     depends_on:
       - dagster_storage
     profiles: ["workflow-orchestration", "all"]
 
-  jupyterlab:
+  training-jupyterlab:
     build:
       context: model-training
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.jupyter
     ports:
       - 8888:8888
     volumes:
@@ -85,8 +87,9 @@ services:
       - "./config:/home/jovyan/config"
       - "./model-tracking-registry/mlartifacts:/mlartifacts"
       - "./notebooks:/home/jovyan/work"
+      - "./model-training:/home/jovyan/code"
     environment:
-      - PYTHONPATH=$PYTHONPATH:/home/jovyan/work/
+      - PYTHONPATH=$PYTHONPATH:/home/jovyan/code/
       - DATA_DIR=/home/jovyan/data
       - STORAGE_DIR=/home/jovyan/data/storage
       - CONFIG_DIR=/home/jovyan/config
@@ -109,6 +112,38 @@ services:
     networks:
       - net
     profiles: ["model-training", "workflow-orchestration", "all"]
+
+  training-dagster:
+    build:
+      context: model-training
+      dockerfile: Dockerfile.dagster
+    entrypoint:
+      - dagster
+      - api
+      - grpc
+      - -h
+      - "0.0.0.0"
+      - -p
+      - "4000"
+      - -m
+      - workflows.definitions
+    ports:
+      - "4000:4000"
+    volumes:
+      - "./model-training:/opt/dagster/app"
+      - "./notebooks:/opt/dagster/notebooks"
+      - "./data:/home/jovyan/data"
+      - "./data/assets:/opt/dagster/dagster_home/storage"
+    environment:
+      DAGSTER_POSTGRES_USER: "postgres_user"
+      DAGSTER_POSTGRES_PASSWORD: "postgres_password"
+      DAGSTER_POSTGRES_DB: "postgres_db"
+      STORAGE_DIR: "/opt/dagster/dagster_home/storage"
+      DATA_DIR: "/home/jovyan/data"
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
+    networks:
+      - net
+    profiles: ["workflow-orchestration", "all"]
 
 networks:
   net:

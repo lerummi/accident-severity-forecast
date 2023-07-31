@@ -1,2 +1,6 @@
 load_from:
   - python_file: workflows/definitions.py
+  - grpc_server:
+      host: training-dagster
+      port: 4000
+      location_name: model-training-using-workflow

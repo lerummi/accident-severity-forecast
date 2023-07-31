@@ -5,7 +5,7 @@ description = ""
 authors = ["lerummi <martin.krause.85@gmx.de>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "model_training"}]
+packages = [{include = "workflows"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
