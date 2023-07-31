@@ -29,7 +29,7 @@ categorization = load_yaml(
     io_manager_key="partitioned_io_manager"
 )
 def raw_accidents(context) -> pandas.DataFrame:
-    """Download accidents from https://data.dft.gov.uk (from 2016)."""
+    """Download accidents from data.dft.gov.uk (starting 2016)."""
 
     logger = get_dagster_logger()
     year = context.asset_partition_key_for_output()
@@ -63,7 +63,7 @@ def raw_accidents(context) -> pandas.DataFrame:
     io_manager_key="partitioned_io_manager"
 )
 def raw_vehicles(context) -> pandas.DataFrame:
-    """Download vehicles from https://data.dft.gov.uk (from 2016)."""
+    """Download accidents from data.dft.gov.uk (starting 2016)."""
 
     logger = get_dagster_logger()
     year = context.asset_partition_key_for_output()
@@ -97,7 +97,7 @@ def raw_vehicles(context) -> pandas.DataFrame:
     io_manager_key="partitioned_io_manager"
 )
 def raw_casualties(context) -> pandas.DataFrame:
-    """Download casualties from https://data.dft.gov.uk (from 2016)."""
+    """Download accidents from data.dft.gov.uk (starting 2016)."""
 
     logger = get_dagster_logger()
     year = context.asset_partition_key_for_output()
@@ -368,7 +368,8 @@ def accidents_vehicles_casualties_preprocessed(
 
     # Transform data(-time) columns
     X["accident.year"] = X["accident.date"].dt.year
-    X["accident.month"] = X["accident.date"].dt.year
+    X["accident.month"] = X["accident.date"].dt.month
+    X["accident.day"] = X["accident.date"].dt.day
     X["accident.weekday"] = X["accident.date"].dt.dayofweek
     X["accident.hour"] = X["accident.time"].dt.total_seconds() / 60 / 60
 

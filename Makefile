@@ -32,3 +32,8 @@ run-compose: CARGS?=--profile all
 run-compose: ## Run composition locally
 	docker-compose $(CARGS) up --build
 
+##@ Run simulation mode
+simulation: DAYSPERSECOND!=1
+simulation: ## Run time simulation starting at SIMULATION_START_DATE and continuously ingest data, make model inference, evaluate model and train model based on monitoring metrics drop
+	echo 0
+
