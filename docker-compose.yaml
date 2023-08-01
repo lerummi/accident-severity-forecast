@@ -1,6 +1,21 @@
 version: "3"
 
 services:
+  # Localstack container to mimic AWS services
+  localstack:
+    image: localstack/localstack:2.2
+    ports:
+      - "4566:4566" # LocalStack endpoint
+      - "4510-4559:4510-4559" # external services port range
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ./localstack-init.sh:/etc/localstack/init/ready.d/script.sh
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - net
+    profiles: ["model-training", "workflow-orchestration", "all"]
+
   # This service runs the postgres DB used by dagster for run storage, schedule storage,
   # and event log storage.
   dagster_storage:
@@ -88,6 +103,8 @@ services:
       - "./model-tracking-registry/mlartifacts:/mlartifacts"
       - "./notebooks:/home/jovyan/work"
       - "./model-training:/home/jovyan/code"
+    env_file:
+      - .env.local
     environment:
       - PYTHONPATH=$PYTHONPATH:/home/jovyan/code/
       - DATA_DIR=/home/jovyan/data
@@ -104,13 +121,21 @@ services:
     build:
       context: model-tracking-registry
       dockerfile: Dockerfile
+    entrypoint:
+      - mlflow
+      - server
+      - --default-artifact-root
+      - s3://mlflow-bucket/
+      - --host
+      - 0.0.0.0
+    env_file:
+      - .env.local
     ports:
       - 5000:5000
-    volumes:
-      - "./model-tracking-registry/mlruns:/mlruns"
-      - "./model-tracking-registry/mlartifacts:/mlartifacts"
     networks:
       - net
+    depends_on:
+      - localstack
     profiles: ["model-training", "workflow-orchestration", "all"]
 
   training-dagster:
