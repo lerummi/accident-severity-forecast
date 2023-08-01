@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "model-deployment"
+version = "0.1.0"
+description = ""
+authors = ["lerummi <martin.krause.85@gmx.de>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "model_deployment"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+mlflow = "^2.5.0"
+catboost = "^1.2"
+fastapi = "^0.100.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
