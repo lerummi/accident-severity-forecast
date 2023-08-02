@@ -17,6 +17,7 @@ dagit = "^1.4.2"
 dagster-postgres = "^0.20.2"
 openpyxl = "^3.1.2"
 dagster-webserver = {extras = ["notebook"], version = "^1.4.2"}
+dagster-aws = "^0.20.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"

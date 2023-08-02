@@ -3,14 +3,18 @@ version: "3"
 services:
   # Localstack container to mimic AWS services
   localstack:
-    image: localstack/localstack:2.2
+    build:
+      context: localstack
+    #image: localstack/localstack:2.2
     ports:
       - "4566:4566" # LocalStack endpoint
       - "4510-4559:4510-4559" # external services port range
     environment:
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
-      - ./localstack-init.sh:/etc/localstack/init/ready.d/script.sh
+      - localstack-pods:/pods
+      - ./localstack/localstack-init.sh:/etc/localstack/init/ready.d/init.sh
+      - ./localstack/localstack-shutdown.sh:/etc/localstack/init/shutdown.d/shutdown.sh
       - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
       - net
@@ -47,6 +51,8 @@ services:
       - "3000"
     ports:
       - "3000:3000"
+    env_file:
+      - .env.local
     environment:
       DAGSTER_POSTGRES_USER: "postgres_user"
       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
@@ -62,6 +68,7 @@ services:
       - net
     depends_on:
       - dagster_storage
+      - localstack
     profiles: ["workflow-orchestration", "all"]
 
   # This service runs the dagster-daemon process, which is responsible for taking runs
@@ -74,6 +81,8 @@ services:
       - dagster-daemon
       - run
     restart: on-failure
+    env_file:
+      - .env.local
     environment:
       DAGSTER_POSTGRES_USER: "postgres_user"
       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
@@ -89,6 +98,7 @@ services:
       - net
     depends_on:
       - dagster_storage
+      - localstack
     profiles: ["workflow-orchestration", "all"]
 
   training-jupyterlab:
@@ -112,6 +122,7 @@ services:
       - CONFIG_DIR=/home/jovyan/config
       - JUPYTER_ENABLE_LAB=yes
       - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MLFLOW_S3_ENDPOINT_URL=http://localstack:4566
     entrypoint: start-notebook.sh --NotebookApp.token="" --NotebookApp.notebook_dir=/home/jovyan/work
     networks:
       - net
@@ -130,6 +141,8 @@ services:
       - 0.0.0.0
     env_file:
       - .env.local
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=http://localstack:4566
     ports:
       - 5000:5000
     networks:
@@ -174,3 +187,6 @@ networks:
   net:
     name: net
     driver: bridge
+
+volumes:
+  localstack-pods:

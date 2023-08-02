@@ -16,7 +16,7 @@ from workflows.utils import (
 
 data_dir = Path(os.environ["DATA_DIR"])
 base_url = "https://data.dft.gov.uk/road-accidents-safety-data"
-years = list(np.arange(2016, 2022).astype(str))
+years = list(np.arange(2016, 2018).astype(str))
 
 categorization = load_yaml(
     Path(os.environ["CONFIG_DIR"]) / "categorization.yaml"
@@ -26,7 +26,7 @@ categorization = load_yaml(
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="1_download_source_datasets",
-    io_manager_key="partitioned_io_manager"
+    io_manager_key="s3_io_manager"
 )
 def raw_accidents(context) -> pandas.DataFrame:
     """Download accidents from data.dft.gov.uk (starting 2016)."""
@@ -60,7 +60,7 @@ def raw_accidents(context) -> pandas.DataFrame:
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="1_download_source_datasets",
-    io_manager_key="partitioned_io_manager"
+    io_manager_key="s3_io_manager"
 )
 def raw_vehicles(context) -> pandas.DataFrame:
     """Download accidents from data.dft.gov.uk (starting 2016)."""
@@ -94,7 +94,7 @@ def raw_vehicles(context) -> pandas.DataFrame:
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="1_download_source_datasets",
-    io_manager_key="partitioned_io_manager"
+    io_manager_key="s3_io_manager"
 )
 def raw_casualties(context) -> pandas.DataFrame:
     """Download accidents from data.dft.gov.uk (starting 2016)."""
@@ -128,7 +128,7 @@ def raw_casualties(context) -> pandas.DataFrame:
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="2_merge_downloaded_datasets",
-    io_manager_key="partitioned_io_manager"
+    io_manager_key="s3_io_manager"
 )
 def accidents_vehicles_merged(
     context,
@@ -152,7 +152,7 @@ def accidents_vehicles_merged(
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="2_merge_downloaded_datasets",
-    io_manager_key="partitioned_io_manager"
+    io_manager_key="s3_io_manager"
 )
 def accidents_vehicles_casualties_merged(
     context,
@@ -188,7 +188,7 @@ def accidents_vehicles_casualties_merged(
 
 @asset(
     group_name="1_download_source_datasets",
-    io_manager_key="pandas_io_manager"
+    io_manager_key="s3_io_manager"
 )
 def categorical_mapping(context) -> pandas.DataFrame:
     """
@@ -226,7 +226,7 @@ def categorical_mapping(context) -> pandas.DataFrame:
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="3_apply_preprocessing",
-    io_manager_key="partitioned_io_manager"
+    io_manager_key="s3_io_manager"
 )
 def accidents_vehicles_casualties_unify(
     context,
@@ -309,7 +309,7 @@ def accidents_vehicles_casualties_unify(
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="3_apply_preprocessing",
-    io_manager_key="partitioned_io_manager"
+    io_manager_key="s3_io_manager"
 )
 def accidents_vehicles_casualties_preprocessed(
     context,
@@ -402,18 +402,18 @@ def accidents_vehicles_casualties_preprocessed(
     return X.groupby(level=0).agg(agg)
 
 
-# @asset(
-#     group_name="3_apply_preprocessing",
-#     io_manager_key="pandas_io_manager"
-# )
-# def accidents_vehicles_casualties_dataset(
-#     accidents_vehicles_casualties_preprocessed: Dict[str, pandas.DataFrame]
-# ) -> pandas.DataFrame:
-#     """
-#     Merge partitions into single data asset.
-#     """
+@asset(
+    group_name="3_apply_preprocessing",
+    io_manager_key="s3_io_manager"
+)
+def accidents_vehicles_casualties_dataset(
+    accidents_vehicles_casualties_preprocessed: Dict[str, pandas.DataFrame]
+) -> pandas.DataFrame:
+    """
+    Merge partitions into single data asset.
+    """
     
-#     return pandas.concat(
-#         accidents_vehicles_casualties_preprocessed.values(),
-#         axis=0
-#     )
+    return pandas.concat(
+        accidents_vehicles_casualties_preprocessed.values(),
+        axis=0
+    )
