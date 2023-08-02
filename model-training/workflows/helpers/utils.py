@@ -1,4 +1,5 @@
 import os
+import boto3
 import pandas
 from pandas.api.types import (
     is_numeric_dtype,
@@ -36,21 +37,35 @@ def infer_catboost_feature_types(X: pandas.DataFrame, max_categorical_nunique: i
         "text": text
     }
 
+
 def read_partitioned_pandas_asset(asset: str) -> pandas.DataFrame:
     """
-    Read all partitions associcated with a specific asset and concatenate
-    to pandas.DataFrame
+    Download pickle DataFrame from S3 bucket and return it
     """
 
-    assets_dir = Path(os.environ["DATA_DIR"]) / "assets"
+    BUCKET_NAME = os.environ["WORKFLOW_DATA_BUCKET"]
+    LOCAL_FOLDER = "/tmp/"
 
-    directory = assets_dir / asset
-    if not directory.exists():
-        raise IOError(
-            f"Apparently and asset '{asset}' is not available in the storage "
-            f"directory {assets_dir}"
-        )
-
-    return pandas.concat(
-        pandas.read_parquet(file) for file in directory.glob("**/*.parquet")
+    s3_client = boto3.client(
+        "s3", 
+        endpoint_url=os.environ.get("S3_ENDPOINT_URL", None)
     )
+
+    try:
+        s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER + asset)
+        with open(LOCAL_FOLDER + asset, "rb") as input_file:
+            data = pandas.read_pickle(input_file)
+    except Exception as e:
+        print(asset, "- failed to download from S3, so terminate.")
+        print(e)
+        raise e
+    if not isinstance(data, pandas.DataFrame):
+        exception_message = (
+            asset + "- is not a pandas DataFrame, strange, raise Exception"
+        )
+        print(exception_message)
+        raise Exception(exception_message)
+    # here you can check the columns of the DataFrame
+    print(asset, "- downloaded OK, passed checks")
+
+    return data

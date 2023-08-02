@@ -1,12 +1,5 @@
 FROM python:3.11-slim
 
-ARG MLFLOW_TRACKING_URI=http://0.0.0.0:5000
-ARG MODEL_NAME=accident_severity
-ARG MODEL_VERSION=6
-ARG MODEL_FLAVOR=catboost
-
-ENV MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
-
 # Install apt packages
 RUN apt-get update && \
     apt-get install -y git && \
@@ -18,6 +11,9 @@ RUN apt-get update && \
 COPY pyproject.toml pyproject.toml
 COPY poetry.lock poetry.lock
 
+WORKDIR /app
+COPY app.py .
+
 # Install Python 3 packages
 RUN poetry export -o /tmp/requirements.txt --without-hashes && \
     cat /tmp/requirements.txt
@@ -27,7 +23,12 @@ RUN pip install \
     --use-deprecated=legacy-resolver \
     -r /tmp/requirements.txt
 
-RUN echo PATH=$PATH:/root/.local/bin >> ~/.bashrc
+RUN echo PATH=$PATH:/root/.local/bin >> ~/.bashrc   
 RUN mkdir -p /opt/mlflow
-COPY download_model.py .
-RUN python3 download_model.py -m accident_severity -v 6 -f catboost
+
+COPY start.sh /
+RUN chmod +x /start.sh
+
+EXPOSE 8000
+
+ENTRYPOINT [ ]

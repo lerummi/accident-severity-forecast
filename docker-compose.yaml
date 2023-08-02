@@ -1,24 +1,42 @@
 version: "3"
 
 services:
-  # Localstack container to mimic AWS services
-  localstack:
-    build:
-      context: localstack
-    #image: localstack/localstack:2.2
+  # Minio container to mimic AWS services
+  minio:
+    restart: always
+    image: minio/minio:RELEASE.2023-07-21T21-12-44Z
     ports:
-      - "4566:4566" # LocalStack endpoint
-      - "4510-4559:4510-4559" # external services port range
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ':9001' --address ':9000'
     environment:
-      - DOCKER_HOST=unix:///var/run/docker.sock
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio123
     volumes:
-      - localstack-pods:/pods
-      - ./localstack/localstack-init.sh:/etc/localstack/init/ready.d/init.sh
-      - ./localstack/localstack-shutdown.sh:/etc/localstack/init/shutdown.d/shutdown.sh
-      - "/var/run/docker.sock:/var/run/docker.sock"
+      - ./data/s3:/data
     networks:
       - net
-    profiles: ["model-training", "workflow-orchestration", "all"]
+    profiles: ["model-training", "workflow-orchestration", "simulation", "all"]
+
+  minio-init:
+    image: minio/mc:RELEASE.2023-07-21T20-44-27Z
+    depends_on:
+      - minio
+    env_file:
+      - .env.local
+    entrypoint: >
+      /bin/sh -c "
+      /tmp/wait-for-it.sh minio:9000 &&
+      /usr/bin/mc alias set minio http://minio:9000 minio minio123 &&
+      /usr/bin/mc mb --ignore-existing minio/mlflow-bucket &&
+      /usr/bin/mc mb --ignore-existing minio/accident-severity-workflow-data;
+      exit 0;
+      "
+    volumes:
+      - ./wait-for-it.sh:/tmp/wait-for-it.sh
+    networks:
+      - net
+    profiles: ["model-training", "workflow-orchestration", "simulation", "all"]
 
   # This service runs the postgres DB used by dagster for run storage, schedule storage,
   # and event log storage.
@@ -68,7 +86,7 @@ services:
       - net
     depends_on:
       - dagster_storage
-      - localstack
+      - minio
     profiles: ["workflow-orchestration", "all"]
 
   # This service runs the dagster-daemon process, which is responsible for taking runs
@@ -98,7 +116,7 @@ services:
       - net
     depends_on:
       - dagster_storage
-      - localstack
+      - minio
     profiles: ["workflow-orchestration", "all"]
 
   training-jupyterlab:
@@ -122,7 +140,7 @@ services:
       - CONFIG_DIR=/home/jovyan/config
       - JUPYTER_ENABLE_LAB=yes
       - MLFLOW_TRACKING_URI=http://mlflow:5000
-      - MLFLOW_S3_ENDPOINT_URL=http://localstack:4566
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
     entrypoint: start-notebook.sh --NotebookApp.token="" --NotebookApp.notebook_dir=/home/jovyan/work
     networks:
       - net
@@ -142,14 +160,14 @@ services:
     env_file:
       - .env.local
     environment:
-      - MLFLOW_S3_ENDPOINT_URL=http://localstack:4566
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
     ports:
       - 5000:5000
     networks:
       - net
     depends_on:
-      - localstack
-    profiles: ["model-training", "workflow-orchestration", "all"]
+      - minio
+    profiles: ["model-training", "workflow-orchestration", "simulation", "all"]
 
   training-dagster:
     build:
@@ -170,8 +188,8 @@ services:
     volumes:
       - "./model-training:/opt/dagster/app"
       - "./notebooks:/opt/dagster/notebooks"
-      - "./data:/home/jovyan/data"
-      - "./data/assets:/opt/dagster/dagster_home/storage"
+    env_file:
+      - .env.local
     environment:
       DAGSTER_POSTGRES_USER: "postgres_user"
       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
@@ -179,14 +197,34 @@ services:
       STORAGE_DIR: "/opt/dagster/dagster_home/storage"
       DATA_DIR: "/home/jovyan/data"
       MLFLOW_TRACKING_URI: "http://mlflow:5000"
+      MLFLOW_S3_ENDPOINT_URL: "http://minio:9000"
     networks:
       - net
     profiles: ["workflow-orchestration", "all"]
+
+  deployed-model:
+    build:
+      context: model-deployment
+      dockerfile: Dockerfile
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_REGION: eu-central-1
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MODEL_NAME: accident-severity
+      MODEL_VERSION: 1
+    depends_on:
+      - minio
+      - mlflow
+    command: /start.sh
+    ports:
+      - "8000:8000"
+    networks:
+      - net
+    profiles: ["simulation", "all"]
 
 networks:
   net:
     name: net
     driver: bridge
-
-volumes:
-  localstack-pods:
