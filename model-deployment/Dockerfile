@@ -12,7 +12,6 @@ COPY pyproject.toml pyproject.toml
 COPY poetry.lock poetry.lock
 
 WORKDIR /app
-COPY app.py .
 
 # Install Python 3 packages
 RUN poetry export -o /tmp/requirements.txt --without-hashes && \
@@ -26,9 +25,8 @@ RUN pip install \
 RUN echo PATH=$PATH:/root/.local/bin >> ~/.bashrc   
 RUN mkdir -p /opt/mlflow
 
+COPY app.py models.py .
 COPY start.sh /
 RUN chmod +x /start.sh
 
 EXPOSE 8000
-
-ENTRYPOINT [ ]

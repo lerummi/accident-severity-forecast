@@ -1,33 +1,40 @@
 import os
-import mlflow
 import json
-from fastapi import FastAPI, HTTPException, Request, Response
+import mlflow
+from typing import List
+from fastapi import FastAPI, HTTPException, Response
 
-app = FastAPI()
+from models import (
+    type_convert,
+    input_signature_to_schema,
+    Predictions
+)
 
-# Load the MLflow model during app startup
 model_name = os.environ["MODEL_NAME"]
 model_version = os.environ["MODEL_VERSION"]
 model_path = f"models:/{model_name}/{model_version}"
-loaded_model = None
 
+app = FastAPI(
+    title="Model inference App",
+    description=
+        f"Make inference given deployed model: {model_path}"
+)
 
-@app.on_event("startup")
-async def load_model():
-    global loaded_model
-    loaded_model = mlflow.pyfunc.load_model(model_path)
+# Load the MLflow model during app startup
+loaded_model = mlflow.pyfunc.load_model(model_path)
+input_signature = input_signature_to_schema(loaded_model)
 
 
 @app.post("/predict/")
-async def predict(request: Request):
+async def predict(data: List[input_signature]) -> Predictions:
     if loaded_model is None:
         raise HTTPException(status_code=500, detail="Model not loaded")
 
     try:
-        data = await request.json()
-        # Assuming your model expects the input data in a specific format, adjust accordingly
+        # Convert pydantic model to dict
+        data = list(map(dict, data))
         predictions = loaded_model.predict(data)
-        return {"predictions": predictions}
+        return {"predictions": list(predictions)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     

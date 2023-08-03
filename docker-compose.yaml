@@ -206,6 +206,7 @@ services:
     build:
       context: model-deployment
       dockerfile: Dockerfile
+    image: accident-severity-model:$MODEL_VERSION
     environment:
       MLFLOW_TRACKING_URI: http://mlflow:5000
       MLFLOW_S3_ENDPOINT_URL: http://minio:9000
@@ -213,7 +214,7 @@ services:
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: minio123
       MODEL_NAME: accident-severity
-      MODEL_VERSION: 1
+      MODEL_VERSION: $MODEL_VERSION
     depends_on:
       - minio
       - mlflow

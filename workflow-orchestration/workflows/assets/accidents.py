@@ -128,7 +128,8 @@ def raw_casualties(context) -> pandas.DataFrame:
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="2_merge_downloaded_datasets",
-    io_manager_key="s3_io_manager"
+    io_manager_key="s3_io_manager",
+    compute_kind="pandas"
 )
 def accidents_vehicles_merged(
     context,
@@ -152,7 +153,8 @@ def accidents_vehicles_merged(
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="2_merge_downloaded_datasets",
-    io_manager_key="s3_io_manager"
+    io_manager_key="s3_io_manager",
+    compute_kind="pandas"
 )
 def accidents_vehicles_casualties_merged(
     context,
@@ -226,7 +228,8 @@ def categorical_mapping(context) -> pandas.DataFrame:
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="3_apply_preprocessing",
-    io_manager_key="s3_io_manager"
+    io_manager_key="s3_io_manager",
+    compute_kind="pandas"
 )
 def accidents_vehicles_casualties_unify(
     context,
@@ -309,7 +312,8 @@ def accidents_vehicles_casualties_unify(
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
     group_name="3_apply_preprocessing",
-    io_manager_key="s3_io_manager"
+    io_manager_key="s3_io_manager",
+    compute_kind="pandas"
 )
 def accidents_vehicles_casualties_preprocessed(
     context,
@@ -404,7 +408,8 @@ def accidents_vehicles_casualties_preprocessed(
 
 @asset(
     group_name="3_apply_preprocessing",
-    io_manager_key="s3_io_manager"
+    io_manager_key="s3_io_manager",
+    compute_kind="pandas"
 )
 def accidents_vehicles_casualties_dataset(
     accidents_vehicles_casualties_preprocessed: Dict[str, pandas.DataFrame]
@@ -413,7 +418,17 @@ def accidents_vehicles_casualties_dataset(
     Merge partitions into single data asset.
     """
     
-    return pandas.concat(
+    X = pandas.concat(
         accidents_vehicles_casualties_preprocessed.values(),
         axis=0
     )
+
+    # Establish dtype safety: There are some issues using type conversion
+    # when finally using the data for inference making via api
+    for column in X:
+        if X[column].dtype == np.int32:
+            X[column] = X[column].astype(int)
+        elif X[column].dtype == np.float32:
+            X[column] = X[column].astype(float)
+
+    return X

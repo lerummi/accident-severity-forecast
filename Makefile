@@ -35,6 +35,7 @@ run-compose: ## Run composition locally
 ##@ Run simulation mode
 simulation: SECONDS_PER_DAY?=5
 simulation: EVAL_SCHEDULER_INCREMENT?=1
+simulation: MODEL_VERSION=
 simulation: ## Run time simulation starting at SIMULATION_START_DATE and continuously ingest data, make model inference, evaluate model and train model based on monitoring metrics drop. Parameter int SECONDS_PER_DAY describe, how many (real!) seconds are forming a day.
-	$(MAKE) run-compose CARGS="--profile simulation" -d
-
+	export MODEL_VERSION=$(MODEL_VERSION)
+	docker-compose --profile simulation up --build
