@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "model-monitoring"
+version = "0.1.0"
+description = ""
+authors = ["lerummi <martin.krause.85@gmx.de>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "model_monitoring"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.0.3"
+pyarrow = "^12.0.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

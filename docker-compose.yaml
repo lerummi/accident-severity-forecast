@@ -48,7 +48,7 @@ services:
       POSTGRES_DB: "postgres_db"
     networks:
       - net
-    profiles: ["workflow-orchestration", "all"]
+    profiles: ["workflow-orchestration", "simulation", "all"]
 
   # This service runs dagit, which loads your user code from the user code container.
   # Since our instance uses the QueuedRunCoordinator, any runs submitted from dagit will be put on
@@ -87,7 +87,7 @@ services:
     depends_on:
       - dagster_storage
       - minio
-    profiles: ["workflow-orchestration", "all"]
+    profiles: ["workflow-orchestration", "simulation", "all"]
 
   # This service runs the dagster-daemon process, which is responsible for taking runs
   # off of the queue and launching them, as well as creating runs from schedules or sensors.
@@ -117,7 +117,7 @@ services:
     depends_on:
       - dagster_storage
       - minio
-    profiles: ["workflow-orchestration", "all"]
+    profiles: ["workflow-orchestration", "simulation", "all"]
 
   training-jupyterlab:
     build:
@@ -221,6 +221,34 @@ services:
     command: /start.sh
     ports:
       - "8000:8000"
+    networks:
+      - net
+    profiles: ["simulation", "all"]
+
+  model-monitoring:
+    build:
+      context: model-monitoring
+      dockerfile: Dockerfile.dagster
+    entrypoint:
+      - dagster
+      - api
+      - grpc
+      - -h
+      - "0.0.0.0"
+      - -p
+      - "4000"
+      - -m
+      - workflows.definitions
+    ports:
+      - "4000:4000"
+    volumes:
+      - "./model-monitoring:/opt/dagster/app"
+    env_file:
+      - .env.local
+    environment:
+      DAGSTER_POSTGRES_USER: "postgres_user"
+      DAGSTER_POSTGRES_PASSWORD: "postgres_password"
+      DAGSTER_POSTGRES_DB: "postgres_db"
     networks:
       - net
     profiles: ["simulation", "all"]

@@ -4,3 +4,7 @@ load_from:
       host: training-dagster
       port: 4000
       location_name: model-training-using-workflow
+  - grpc_server:
+      host: model-monitoring
+      port: 4000
+      location_name: model-application-simulation

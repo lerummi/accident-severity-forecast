@@ -3,14 +3,14 @@ from dagster import load_assets_from_modules
 from dagster_aws.s3.io_manager import s3_pickle_io_manager
 from dagster_aws.s3.resources import s3_resource
 
-from workflows.assets import accidents
+from . import assets
 
 
 defs = Definitions(
     assets=load_assets_from_modules(
         modules=[
-            accidents
-        ],
+            assets
+        ]
     ),
     resources={
         "s3_io_manager": s3_pickle_io_manager.configured(

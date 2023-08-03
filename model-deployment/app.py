@@ -17,7 +17,7 @@ model_path = f"models:/{model_name}/{model_version}"
 app = FastAPI(
     title="Model inference App",
     description=
-        f"Make inference given deployed model: {model_path}"
+        f"Make inference given deployed model: **{model_path}**"
 )
 
 # Load the MLflow model during app startup
