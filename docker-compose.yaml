@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  # Minio container to mimic AWS services
+  # Minio container to mimic AWS S3 service
   minio:
     restart: always
     image: minio/minio:RELEASE.2023-07-21T21-12-44Z
@@ -37,6 +37,17 @@ services:
     networks:
       - net
     profiles: ["model-training", "workflow-orchestration", "simulation", "all"]
+
+    mlflow_db:
+      restart: always
+      image: mysql/mysql-server:8.0
+      environment:
+        - MYSQL_DATABASE=mysql_db
+        - MYSQL_USER=mysql_user
+        - MYSQL_PASSWORD=mysql_pass
+        - MYSQL_ROOT_PASSWORD=mysql_root
+      volumes:
+        - mlflow_dbdata:/var/lib/mysql
 
   # This service runs the postgres DB used by dagster for run storage, schedule storage,
   # and event log storage.
@@ -153,6 +164,8 @@ services:
     entrypoint:
       - mlflow
       - server
+      - --backend-store-uri
+      - mysql+pymysql://mysql_user:mysql_pass@db:3306/mlflow_db
       - --default-artifact-root
       - s3://mlflow-bucket/
       - --host
@@ -290,4 +303,5 @@ networks:
     driver: bridge
 
 volumes:
+  mlflow_dbdata:
   inference-db-volume:
