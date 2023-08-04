@@ -371,13 +371,11 @@ def accidents_vehicles_casualties_preprocessed(
         ).astype(object)
 
     # Transform data(-time) columns
-    X["accident.year"] = X["accident.date"].dt.year
     X["accident.month"] = X["accident.date"].dt.month
-    X["accident.day"] = X["accident.date"].dt.day
     X["accident.weekday"] = X["accident.date"].dt.dayofweek
     X["accident.hour"] = X["accident.time"].dt.total_seconds() / 60 / 60
 
-    X.pop("accident.date")
+    X["date"] = X.pop("accident.date")
     X.pop("accident.time")
 
     X = fillna_categorical(X)

@@ -5,6 +5,10 @@ from dagster import asset
 from dagster import SourceAsset, AssetKey, AssetIn
 
 
+# This asset is only needed, because define_dagstermill_asset can not
+# directly get input from SourceAsset via the 'ins' argument, here strictly
+# a AssetIn is required, which, however can not be used to load from foreign
+# code base
 accidents_vehicles_casualties_dataset = SourceAsset(
     key=AssetKey("accidents_vehicles_casualties_dataset"),
     io_manager_key="s3_io_manager"

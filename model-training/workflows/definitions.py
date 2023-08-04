@@ -12,6 +12,7 @@ defs = Definitions(
         modules=[
             assets
         ],
+        group_name="model_training"
     ),
     resources={
         "output_notebook_io_manager": 

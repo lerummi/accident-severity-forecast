@@ -229,31 +229,65 @@ services:
     build:
       context: model-monitoring
       dockerfile: Dockerfile.dagster
-    entrypoint:
-      - dagster
-      - api
-      - grpc
-      - -h
-      - "0.0.0.0"
-      - -p
-      - "4000"
-      - -m
-      - workflows.definitions
+    command: >
+      /bin/bash -c "
+      export INITIAL_UNIX_TIMESTAMP=$$(date +%s) && 
+      python3 init_scripts.py &&
+      dagster api grpc -h 0.0.0.0 -p 4000 -m workflows.definitions
+      "
     ports:
       - "4000:4000"
     volumes:
       - "./model-monitoring:/opt/dagster/app"
     env_file:
       - .env.local
+    depends_on:
+      - inference_db
     environment:
-      DAGSTER_POSTGRES_USER: "postgres_user"
-      DAGSTER_POSTGRES_PASSWORD: "postgres_password"
-      DAGSTER_POSTGRES_DB: "postgres_db"
+      DAGSTER_POSTGRES_USER: postgres_user
+      DAGSTER_POSTGRES_PASSWORD: postgres_password
+      DAGSTER_POSTGRES_DB: postgres_db
+      SECONDS_PER_DAY: $SECONDS_PER_DAY
+      POSTGRES_INFERENCE_SERVER: inference_db
+      POSTGRES_INFERENCE_DB: db
+      POSTGRES_INFERENCE_USER: postgres_user
+      POSTGRES_INFERENCE_PASSWORD: postgres_password
+      POSTGRES_INFERENCE_PORT: 5432
     networks:
       - net
+    profiles: ["simulation", "all"]
+
+  # This service runs the postgres DB used by dagster for run storage, schedule storage,
+  # and event log storage.
+  inference_db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: db
+    networks:
+      - net
+    volumes:
+      - inference-db-volume:/var/lib/postgresql/data
+    profiles: ["simulation", "all"]
+
+  adminer:
+    image: adminer:4.8.1
+    restart: always
+    environment:
+      ADMINER_DEFAULT_SERVER: inference_db
+    ports:
+      - "8080:8080"
+    networks:
+      - net
+    depends_on:
+      - inference_db
     profiles: ["simulation", "all"]
 
 networks:
   net:
     name: net
     driver: bridge
+
+volumes:
+  inference-db-volume:

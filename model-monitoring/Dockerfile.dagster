@@ -24,3 +24,5 @@ RUN pip install \
     -r /tmp/requirements.txt
 
 WORKDIR /opt/dagster/app
+
+COPY init_scripts.py .
