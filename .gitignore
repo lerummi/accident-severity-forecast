@@ -161,5 +161,3 @@ cython_debug/
 
 # Local directories
 data
-mlruns
-mlartifacts

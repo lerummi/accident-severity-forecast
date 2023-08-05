@@ -21,6 +21,17 @@ help: ## display this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\033[36m\033[0m"} /^[a-zA-Z0-9_%\/-]+:.*?##/ { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 	@printf "\n"
 
+##@ Install pre-commit
+pre-commit-install: ## set up the git hooks script
+	@pip install pre-commit
+	@pre-commit --version
+	@pre-commit install
+
+
+##@ Run all pre-commit hooks
+pre-commit: ## run pre-commit hook script
+	pre-commit run --all-files || (printf "\n\n\n" && git --no-pager diff --color=always)
+
 ##@ Build stack
 build-compose: CARGS?=--profile all
 build-compose: DARGS?=--no-cache
