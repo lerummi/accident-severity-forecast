@@ -38,17 +38,6 @@ services:
       - net
     profiles: ["model-training", "workflow-orchestration", "simulation", "all"]
 
-    mlflow_db:
-      restart: always
-      image: mysql/mysql-server:8.0
-      environment:
-        - MYSQL_DATABASE=mysql_db
-        - MYSQL_USER=mysql_user
-        - MYSQL_PASSWORD=mysql_pass
-        - MYSQL_ROOT_PASSWORD=mysql_root
-      volumes:
-        - mlflow_dbdata:/var/lib/mysql
-
   # This service runs the postgres DB used by dagster for run storage, schedule storage,
   # and event log storage.
   dagster_storage:
@@ -57,6 +46,8 @@ services:
       POSTGRES_USER: "postgres_user"
       POSTGRES_PASSWORD: "postgres_password"
       POSTGRES_DB: "postgres_db"
+    volumes:
+      - dagster-storage-volume:/var/lib/postgresql/data
     networks:
       - net
     profiles: ["workflow-orchestration", "simulation", "all"]
@@ -157,6 +148,19 @@ services:
       - net
     profiles: ["model-training", "all"]
 
+  mlflow_db:
+    restart: always
+    image: mysql/mysql-server:8.0
+    environment:
+      - MYSQL_DATABASE=mysql_db
+      - MYSQL_USER=mysql_user
+      - MYSQL_PASSWORD=mysql_pass
+      - MYSQL_ROOT_PASSWORD=mysql_root
+    networks:
+      - net
+    volumes:
+      - mlflow_dbdata:/var/lib/mysql
+
   mlflow:
     build:
       context: model-tracking-registry
@@ -165,7 +169,7 @@ services:
       - mlflow
       - server
       - --backend-store-uri
-      - mysql+pymysql://mysql_user:mysql_pass@db:3306/mlflow_db
+      - mysql+pymysql://mysql_user:mysql_pass@mlflow_db:3306/mysql_db
       - --default-artifact-root
       - s3://mlflow-bucket/
       - --host
@@ -229,7 +233,6 @@ services:
       MODEL_NAME: accident-severity
       MODEL_VERSION: $MODEL_VERSION
     depends_on:
-      - minio
       - mlflow
     command: /start.sh
     ports:
@@ -266,6 +269,7 @@ services:
       POSTGRES_INFERENCE_USER: postgres_user
       POSTGRES_INFERENCE_PASSWORD: postgres_password
       POSTGRES_INFERENCE_PORT: 5432
+      PREDICT_URL: http://deployed-model:8000/predict
     networks:
       - net
     profiles: ["simulation", "all"]
@@ -297,11 +301,27 @@ services:
       - inference_db
     profiles: ["simulation", "all"]
 
+  grafana:
+    image: grafana/grafana:10.0.3
+    user: "472"
+    ports:
+      - "3030:3000"
+    volumes:
+      - "./model-monitoring/config/grafana_datasources.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro"
+      - "./model-monitoring/config/grafana_dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro"
+      - "./model-monitoring/dashboards:/opt/grafana/dashboards"
+      - "./model-monitoring/config/grafana.ini:/etc/grafana/grafana.ini:ro"
+    networks:
+      - net
+    restart: always
+    profiles: ["simulation", "all"]
+
 networks:
   net:
     name: net
     driver: bridge
 
 volumes:
+  dagster-storage-volume:
   mlflow_dbdata:
   inference-db-volume:

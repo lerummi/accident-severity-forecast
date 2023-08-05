@@ -4,7 +4,8 @@ from sqlalchemy import create_engine, inspect, text
 
 def reinitialize_db():
     """
-    Reinintialize database by removing all tables inside.
+    Reinintialize database by removing all tables inside associcate with
+    recent data.
     """
 
     server = os.environ["POSTGRES_INFERENCE_SERVER"]
@@ -19,8 +20,9 @@ def reinitialize_db():
     table_names = inspect(engine).get_table_names()
     conn = engine.connect()
     for table_name in table_names:
-        conn.execute(text(f"DROP TABLE IF EXISTS public.{table_name};"))
-        conn.commit()
+        if "recent" in table_name:
+            conn.execute(text(f"DROP TABLE IF EXISTS public.{table_name};"))
+            conn.commit()
     conn.close()
 
 

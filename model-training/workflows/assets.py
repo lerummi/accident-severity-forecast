@@ -37,5 +37,8 @@ jupyter_notebook_asset = define_dagstermill_asset(
         "../../notebooks/predictive-modeling.ipynb"
     ),
     io_manager_key="output_notebook_io_manager",
-    ins={"X": AssetIn("loaded_accidents_vehicles_casualties_dataset")}
+    ins={"X": AssetIn("loaded_accidents_vehicles_casualties_dataset")},
+    description=
+        "Run training notebook, log metrics and (registered) "
+        "model to MLflow"
 )

@@ -3,6 +3,7 @@ import os
 import boto3
 import pandas
 import datetime
+from typing import List
 
 
 def get_simulation_date():
@@ -57,20 +58,27 @@ def read_pandas_asset(asset: str) -> pandas.DataFrame:
 
 def infer_feature_types(
     X: pandas.DataFrame, 
+    skip: List = None,
     max_categorical_nunique: int = 10
 ):
     
     categorical = []
     text = []
+    numerical = []
     
     for column in X:
-        if X[column].dtype in object:
+        if column in skip:
+            continue
+        if X[column].dtype == object:
             if X[column].nunique() > max_categorical_nunique:
                 text.append(column)
             else:
                 categorical.append(column)
+        else:
+            numerical.append(column)
                 
     return {
         "categorical": categorical, 
-        "text": text
+        "text": text,
+        "numerical": numerical
     }

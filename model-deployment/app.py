@@ -33,7 +33,10 @@ async def predict(data: List[input_signature]) -> Predictions:
     try:
         # Convert pydantic model to dict
         data = list(map(dict, data))
-        predictions = loaded_model.predict(data)
+        if len(data):
+            predictions = loaded_model.predict(data)
+        else:  # Account for empty request body
+            predictions = []
         return {"predictions": list(predictions)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
