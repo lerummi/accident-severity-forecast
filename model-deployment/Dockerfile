@@ -22,7 +22,7 @@ RUN pip install \
     --use-deprecated=legacy-resolver \
     -r /tmp/requirements.txt
 
-RUN echo PATH=$PATH:/root/.local/bin >> ~/.bashrc   
+RUN echo PATH=$PATH:/root/.local/bin >> ~/.bashrc
 RUN mkdir -p /opt/mlflow
 
 COPY app.py models.py /app/

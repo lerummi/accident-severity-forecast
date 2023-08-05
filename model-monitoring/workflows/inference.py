@@ -1,6 +1,7 @@
 import os
-import requests
+
 import pandas
+import requests
 
 predict_url = os.environ["PREDICT_URL"]
 
@@ -16,11 +17,7 @@ def make_prediction(X: pandas.DataFrame):
 
     headers = {"Content-type": "application/json"}
 
-    response = requests.post(
-        predict_url,
-        json=X.to_dict("records"),
-        headers=headers
-    )
+    response = requests.post(predict_url, json=X.to_dict("records"), headers=headers)
 
     if response.status_code != 200:
         raise Exception(

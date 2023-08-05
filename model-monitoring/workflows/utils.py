@@ -1,9 +1,10 @@
-import time
+import datetime
 import os
+import time
+from typing import List
+
 import boto3
 import pandas
-import datetime
-from typing import List
 
 
 def get_simulation_date():
@@ -16,7 +17,7 @@ def get_simulation_date():
     initial_timestamp = float(os.environ["INITIAL_UNIX_TIMESTAMP"])
     current_timestamp = float(time.time())
     seconds_per_day = float(os.environ["SECONDS_PER_DAY"])
-    
+
     days_gone = (current_timestamp - initial_timestamp) / seconds_per_day
     days_gone = datetime.timedelta(days=days_gone)
 
@@ -31,10 +32,7 @@ def read_pandas_asset(asset: str) -> pandas.DataFrame:
     BUCKET_NAME = os.environ["WORKFLOW_DATA_BUCKET"]
     LOCAL_FOLDER = "/tmp/"
 
-    s3_client = boto3.client(
-        "s3", 
-        endpoint_url=os.environ.get("S3_ENDPOINT_URL", None)
-    )
+    s3_client = boto3.client("s3", endpoint_url=os.environ.get("S3_ENDPOINT_URL", None))
 
     try:
         s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER + asset)
@@ -57,15 +55,13 @@ def read_pandas_asset(asset: str) -> pandas.DataFrame:
 
 
 def infer_feature_types(
-    X: pandas.DataFrame, 
-    skip: List = None,
-    max_categorical_nunique: int = 10
+    X: pandas.DataFrame, skip: List = None, max_categorical_nunique: int = 10
 ):
-    
+
     categorical = []
     text = []
     numerical = []
-    
+
     for column in X:
         if column in skip:
             continue
@@ -76,9 +72,5 @@ def infer_feature_types(
                 categorical.append(column)
         else:
             numerical.append(column)
-                
-    return {
-        "categorical": categorical, 
-        "text": text,
-        "numerical": numerical
-    }
+
+    return {"categorical": categorical, "text": text, "numerical": numerical}

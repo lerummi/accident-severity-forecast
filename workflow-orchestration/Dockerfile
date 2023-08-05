@@ -18,7 +18,7 @@ COPY poetry.lock poetry.lock
 
 
 # Install Python 3 packages
-RUN pip install poetry && \	
+RUN pip install poetry && \
     poetry export -o /tmp/requirements.txt --without-hashes && \
     cat /tmp/requirements.txt
 

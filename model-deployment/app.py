@@ -1,14 +1,10 @@
-import os
 import json
-import mlflow
+import os
 from typing import List
-from fastapi import FastAPI, HTTPException, Response
 
-from models import (
-    type_convert,
-    input_signature_to_schema,
-    Predictions
-)
+import mlflow
+from fastapi import FastAPI, HTTPException, Response
+from models import Predictions, input_signature_to_schema, type_convert
 
 model_name = os.environ["MODEL_NAME"]
 model_version = os.environ["MODEL_VERSION"]
@@ -16,8 +12,7 @@ model_path = f"models:/{model_name}/{model_version}"
 
 app = FastAPI(
     title="Model inference App",
-    description=
-        f"Make inference given deployed model: **{model_path}**"
+    description=f"Make inference given deployed model: **{model_path}**",
 )
 
 # Load the MLflow model during app startup
@@ -40,7 +35,7 @@ async def predict(data: List[input_signature]) -> Predictions:
         return {"predictions": list(predictions)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    
+
 
 @app.get("/info/")
 async def get_model_info():
@@ -52,12 +47,8 @@ async def get_model_info():
         model_info["model_name"] = model_name
         model_info["model_version"] = model_version
         # Assuming the loaded_model.metadata.to_json() returns a JSON string
-        return Response(
-            content=json.dumps(model_info),
-            media_type="application/json"
-        )
+        return Response(content=json.dumps(model_info), media_type="application/json")
     except Exception as e:
         raise HTTPException(
-            status_code=500, 
-            detail="Failed to retrieve model information"
+            status_code=500, detail="Failed to retrieve model information"
         )

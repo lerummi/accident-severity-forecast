@@ -1,5 +1,5 @@
 self_vehicle_properties:
-  - vehicle.vehicle_type 
+  - vehicle.vehicle_type
   - vehicle.engine_capacity_cc
   - vehicle.propulsion_code
   - vehicle.age_of_vehicle

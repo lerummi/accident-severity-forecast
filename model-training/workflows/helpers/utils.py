@@ -1,15 +1,16 @@
 import os
+from pathlib import Path
+from typing import Union
+
 import boto3
 import pandas
+import yaml
 from pandas.api.types import (
-    is_numeric_dtype,
     is_datetime64_any_dtype,
-    is_timedelta64_dtype
+    is_numeric_dtype,
+    is_timedelta64_dtype,
 )
 from pandas.core.dtypes.dtypes import CategoricalDtype
-from typing import Union
-from pathlib import Path
-import yaml
 
 
 def load_yaml(yamlfile: Union[Path, str]):
@@ -20,22 +21,21 @@ def load_yaml(yamlfile: Union[Path, str]):
     return yaml.safe_load(yamlfile.read_text())
 
 
-def infer_catboost_feature_types(X: pandas.DataFrame, max_categorical_nunique: int = 10):
-    
+def infer_catboost_feature_types(
+    X: pandas.DataFrame, max_categorical_nunique: int = 10
+):
+
     categorical = []
     text = []
-    
+
     for column in X:
         if X[column].dtype in (object, CategoricalDtype):
             if X[column].nunique() > max_categorical_nunique:
                 text.append(column)
             else:
                 categorical.append(column)
-                
-    return {
-        "categorical": categorical, 
-        "text": text
-    }
+
+    return {"categorical": categorical, "text": text}
 
 
 def read_partitioned_pandas_asset(asset: str) -> pandas.DataFrame:
@@ -46,10 +46,7 @@ def read_partitioned_pandas_asset(asset: str) -> pandas.DataFrame:
     BUCKET_NAME = os.environ["WORKFLOW_DATA_BUCKET"]
     LOCAL_FOLDER = "/tmp/"
 
-    s3_client = boto3.client(
-        "s3", 
-        endpoint_url=os.environ.get("S3_ENDPOINT_URL", None)
-    )
+    s3_client = boto3.client("s3", endpoint_url=os.environ.get("S3_ENDPOINT_URL", None))
 
     try:
         s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER + asset)

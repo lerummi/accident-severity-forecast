@@ -1,6 +1,7 @@
 import json
-from typing import List, Dict
-from pydantic import create_model, BaseModel
+from typing import Dict, List
+
+from pydantic import BaseModel, create_model
 
 
 def type_convert(typestring: str):
@@ -17,10 +18,7 @@ def type_convert(typestring: str):
 def input_signature_to_schema(model):
     model_info = json.loads(model.metadata.to_json())
     inputs = eval(model_info["signature"]["inputs"])
-    input_signature = {
-        item["name"]: type_convert(item["type"])
-        for item in inputs
-    }
+    input_signature = {item["name"]: type_convert(item["type"]) for item in inputs}
     return create_model("ModelInput", **input_signature)
 
 
