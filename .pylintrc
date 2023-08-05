@@ -1,4 +1,6 @@
 [MESSAGES CONTROL]
 
 disable=invalid-name,
-        no-name-in-module  # due to the way dagster handles imports
+        no-name-in-module,  # due to the way dagster handles imports
+        import-error,
+        missing-module-docstring

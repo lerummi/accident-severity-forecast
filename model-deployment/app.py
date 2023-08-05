@@ -4,7 +4,7 @@ from typing import List
 
 import mlflow
 from fastapi import FastAPI, HTTPException, Response
-from models import Predictions, input_signature_to_schema, type_convert
+from models import Predictions, input_signature_to_schema
 
 model_name = os.environ["MODEL_NAME"]
 model_version = os.environ["MODEL_VERSION"]
@@ -22,23 +22,30 @@ input_signature = input_signature_to_schema(loaded_model)
 
 @app.post("/predict/")
 async def predict(data: List[input_signature]) -> Predictions:
+    """
+    Make inference on data based on deployed model.
+    """
     if loaded_model is None:
         raise HTTPException(status_code=500, detail="Model not loaded")
 
     try:
         # Convert pydantic model to dict
         data = list(map(dict, data))
-        if len(data):
+        if not data:
             predictions = loaded_model.predict(data)
         else:  # Account for empty request body
             predictions = []
         return {"predictions": list(predictions)}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.get("/info/")
 async def get_model_info():
+    """
+    Get some info about the deployed model including model_name and
+    model_version.
+    """
     if loaded_model is None:
         raise HTTPException(status_code=500, detail="Model not loaded")
 
@@ -50,5 +57,5 @@ async def get_model_info():
         return Response(content=json.dumps(model_info), media_type="application/json")
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail="Failed to retrieve model information"
-        )
+            status_code=500, detail=f"Failed to retrieve model information: {e}"
+        ) from e
