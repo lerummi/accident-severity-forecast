@@ -162,8 +162,8 @@ services:
 
   mlflow:
     build:
-      context: model-tracking-registry
-      dockerfile: Dockerfile
+      context: model-training
+      dockerfile: Dockerfile.mlflow
     entrypoint:
       - mlflow
       - server
