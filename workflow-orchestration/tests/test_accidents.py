@@ -1,8 +1,6 @@
-# from workflows.assets import accidents
-from pathlib import Path
 import pandas
-
 import pytest
+from pathlib import Path
 
 from workflows.assets import accidents
 from workflows.config import settings

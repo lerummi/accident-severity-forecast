@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     BASE_URL: str = "https://data.dft.gov.uk/road-accidents-safety-data"
     YEARS_TO_PROCESS: List = list(np.arange(2016, 2018).astype(str))
 
-    CATEGORIZATION_BIN_ENDGES: int = 10
+    CATEGORIZATION_BIN_ENDGES: int = 10  # Number bins for discretizing numeric values
 
 
 settings = Settings()
