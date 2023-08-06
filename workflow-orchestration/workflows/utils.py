@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 from typing import Union
+from logging import Logger
 
 import pandas
 import yaml
@@ -9,6 +10,8 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_timedelta64_dtype,
 )
+
+from workflows.config import settings
 
 
 def runcmd(cmd):
@@ -53,3 +56,24 @@ def fillna_categorical(X: pandas.DataFrame):
         if X[column].dtype == object:
             X[column] = X[column].fillna("None")
     return X
+
+
+def download_raw_files(scope: str, year: str, logger: Logger):
+    """
+    Download raw csv files from UK Road Safety base url.
+    """
+
+    output_dir = Path(settings.DATA_DIR) / "raw"
+    base_url = settings.BASE_URL
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = "/".join([base_url, f"dft-road-casualty-statistics-{scope}-{year}.csv"])
+
+    output_file = output_dir / f"{scope}-{year}.csv"
+
+    logger.info(f"Running wget -v {filename} -O {output_file}")
+    std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
+    logger.info(f"StdOut message: {std_out}")
+    logger.info(f"StdErr message: {std_err}")
+
+    return pandas.read_csv(output_file, low_memory=False)

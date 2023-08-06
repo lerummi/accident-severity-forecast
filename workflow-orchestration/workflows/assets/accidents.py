@@ -5,11 +5,10 @@ from typing import Dict
 import numpy as np
 import pandas
 from dagster import StaticPartitionsDefinition, asset, get_dagster_logger
-from workflows.utils import fillna_categorical, load_yaml, runcmd
+from workflows.config import settings
+from workflows.utils import download_raw_files, fillna_categorical, load_yaml, runcmd
 
-data_dir = Path(os.environ["DATA_DIR"])
-base_url = "https://data.dft.gov.uk/road-accidents-safety-data"
-years = list(np.arange(2016, 2018).astype(str))
+years = settings.YEARS_TO_PROCESS
 
 categorization = load_yaml(Path(os.environ["CONFIG_DIR"]) / "categorization.yaml")
 
@@ -25,19 +24,7 @@ def raw_accidents(context) -> pandas.DataFrame:
     logger = get_dagster_logger()
     year = context.asset_partition_key_for_output()
 
-    output_dir = data_dir / "raw"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    filename = "/".join([base_url, f"dft-road-casualty-statistics-accident-{year}.csv"])
-
-    output_file = output_dir / f"accidents-{year}.csv"
-
-    logger.info(f"Running wget -v {filename} -O {output_file}")
-    std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
-    logger.info(f"StdOut message: {std_out}")
-    logger.info(f"StdErr message: {std_err}")
-
-    return pandas.read_csv(output_file, low_memory=False)
+    return download_raw_files("accident", year, logger)
 
 
 @asset(
@@ -51,19 +38,7 @@ def raw_vehicles(context) -> pandas.DataFrame:
     logger = get_dagster_logger()
     year = context.asset_partition_key_for_output()
 
-    output_dir = data_dir / "raw"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    filename = "/".join([base_url, f"dft-road-casualty-statistics-vehicle-{year}.csv"])
-
-    output_file = output_dir / f"vehicle-{year}.csv"
-
-    logger.info(f"Running wget -v {filename} -O {output_file}")
-    std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
-    logger.info(f"StdOut message: {std_out}")
-    logger.info(f"StdErr message: {std_err}")
-
-    return pandas.read_csv(output_file, low_memory=False)
+    return download_raw_files("vehicle", year, logger)
 
 
 @asset(
@@ -77,19 +52,7 @@ def raw_casualties(context) -> pandas.DataFrame:
     logger = get_dagster_logger()
     year = context.asset_partition_key_for_output()
 
-    output_dir = data_dir / "raw"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    filename = "/".join([base_url, f"dft-road-casualty-statistics-casualty-{year}.csv"])
-
-    output_file = output_dir / f"casualty-{year}.csv"
-
-    logger.info(f"Running wget -v {filename} -O {output_file}")
-    std_out, std_err = runcmd(f"wget -v {filename} -O {output_file}")
-    logger.info(f"StdOut message: {std_out}")
-    logger.info(f"StdErr message: {std_err}")
-
-    return pandas.read_csv(output_file, low_memory=False)
+    return download_raw_files("casualty", year, logger)
 
 
 @asset(
@@ -159,10 +122,10 @@ def categorical_mapping() -> pandas.DataFrame:
 
     logger = get_dagster_logger()
 
-    output_dir = data_dir / "raw"
+    output_dir = Path(settings.DATA_DIR) / "raw"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = "/".join([base_url, "Road-Safety-Open-Dataset-Data-Guide.xlsx"])
+    filename = "/".join([settings.BASE_URL, "Road-Safety-Open-Dataset-Data-Guide.xlsx"])
     output_file = output_dir / "mapping.xlsx"
 
     logger.info(f"Running wget -v {filename} -O {output_file}")

@@ -168,7 +168,7 @@ def recent_evidently_report(
     # import into this module, it is only loaded from the specific asset
     # materialization is happening.
     logger.info("Busy loading report tools")
-    from .report import make_evidently_report
+    from .report import make_evidently_report  # pylint: disable=import-outside-toplevel
 
     logger.info("Finished importing")
 
@@ -182,21 +182,6 @@ def recent_evidently_report(
         recent_accidents_dataset.pop(column)
         reference_accidents_dataset.pop(column)
     dtypes.pop("text")
-
-    # report = Report(
-    #     metrics=[
-    #         ColumnDriftMetric(column_name="predictions"),
-    #         DatasetDriftMetric(),
-    #         DatasetMissingValuesMetric(),
-    #     ]
-    # )
-
-    # column_mapping = ColumnMapping(
-    #     target=None,
-    #     prediction="predictions",
-    #     numerical_features=dtypes["numerical"],
-    #     categorical_features=dtypes["categorical"],
-    # )
 
     # Create evaluation dataset by merging recent_accidents to predictions
     reference_data = reference_accidents_dataset.merge(
@@ -215,41 +200,5 @@ def recent_evidently_report(
     results = make_evidently_report(
         reference_data, evaluation_data, column_dtypes=dtypes, logger=logger
     )
-
-    # start_date = eval_data["date"].min()
-    # end_date = eval_data["date"].max()
-
-    # logger.info(f"Creating reports for date interval: [{start_date, end_date}]")
-
-    # results = []
-    # for date in pandas.date_range(start=start_date, end=end_date):
-    #     eval_single = eval_data[eval_data["date"] == date]
-
-    #     logger.info(f"Creating report for {date} with {len(eval_single)} events.")
-
-    #     if eval_single.empty:
-    #         continue
-
-    #     report.run(
-    #         reference_data=reference_data,
-    #         current_data=eval_single,
-    #         column_mapping=column_mapping,
-    #     )
-
-    #     metrics = report.as_dict()["metrics"]
-
-    #     # Report to dictionary for later db insert
-    #     results.append(
-    #         {
-    #             "date": date,
-    #             "prediction_drift": metrics[0]["result"]["drift_score"],
-    #             "num_drifted_columns": (
-    #                 metrics[1]["result"]["number_of_drifted_columns"]
-    #             ),
-    #             "share_missing_values": (
-    #                 metrics[2]["result"]["current"]["share_of_missing_values"]
-    #             ),
-    #         }
-    #     )
 
     return pandas.DataFrame(results)

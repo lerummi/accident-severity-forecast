@@ -1,0 +1,8 @@
+foo:
+  bar:
+    - 1
+    - 2
+  baz:
+    a: 1
+    b: 2
+expected_foo: '{"foo": {"bar": [1, 2], "baz": {"a": 1, "b": 2}}}'

@@ -5,6 +5,5 @@ disable=invalid-name,
         import-error,  # hard to combine pylint with multiple poetry environments I was confronted due to this multi-project structure
         redefined-outer-name,  # This is how dagster assets work: Using the name of an outer-scope asset as input variable declares a dependency
         missing-module-docstring,
-        import-outside-toplevel,  # Necessary for the evidently imports, expect spinning up a run takes ages
         wrong-import-order,  # Seems isort and pylint share different opinions
-        duplicate-code,  # Having different repos in one, which indent to mimic different repos
+        duplicate-code,  # Having different repos in one, which intend to mimic different repos
