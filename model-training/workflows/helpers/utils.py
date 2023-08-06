@@ -8,6 +8,8 @@ import yaml
 from botocore.exceptions import ClientError
 from pandas.core.dtypes.dtypes import CategoricalDtype
 
+from workflows.config import settings
+
 
 def load_yaml(yamlfile: Union[Path, str]):
     """
@@ -46,14 +48,14 @@ def read_partitioned_pandas_asset(asset: str) -> pandas.DataFrame:
     Download pickle DataFrame from S3 bucket and return it
     """
 
-    BUCKET_NAME = os.environ["WORKFLOW_DATA_BUCKET"]
-    LOCAL_FOLDER = "/tmp/"
+    BUCKET_NAME = settings.WORKFLOW_DATA_BUCKET
+    LOCAL_FOLDER = Path(settings.LOCAL_FOLDER)
 
     s3_client = boto3.client("s3", endpoint_url=os.environ.get("S3_ENDPOINT_URL", None))
 
     try:
-        s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER + asset)
-        with open(LOCAL_FOLDER + asset, "rb") as input_file:
+        s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER / asset)
+        with open(LOCAL_FOLDER / asset, "rb") as input_file:
             data = pandas.read_pickle(input_file)
     except ClientError as e:
         print(asset, "- failed to download from S3, so terminate.")

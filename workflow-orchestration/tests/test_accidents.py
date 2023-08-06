@@ -62,8 +62,6 @@ def accident_vehicle_casualty_preprocessed() -> pandas.DataFrame:  # pylint: dis
         fixtures_dir / "test_accident_vehicle_casualty_preprocessed.csv",
         index_col=None
     )
-    #data["accident.date"] = pandas.to_datetime(data["accident.date"])
-    #data["accident.time"] = pandas.to_timedelta(data["accident.time"])
     return data
 
 

@@ -4,7 +4,6 @@ version = "0.1.0"
 description = ""
 authors = ["lerummi <martin.krause.85@gmx.de>"]
 license = "MIT"
-readme = "README.md"
 packages = [{include = "workflows"}]
 
 [tool.poetry.dependencies]
@@ -18,10 +17,12 @@ tokenizers = "^0.13.3"
 pre-commit = "^3.3.3"
 seaborn = "^0.12.2"
 boto3 = "^1.28.16"
+pydantic = "1.10.12"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
 pytest-cov = "^4.1.0"
+pytest-mock = "^3.11.1"
 
 [build-system]
 requires = ["poetry-core"]
