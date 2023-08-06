@@ -1,16 +1,15 @@
-import pytest
-import time
-import pandas
 from pathlib import Path
 
+import pandas
+import pytest
 from workflows.config import settings
-from workflows.utils import get_simulation_date, read_pandas_asset, infer_feature_types
+from workflows.utils import get_simulation_date, infer_feature_types, read_pandas_asset
 
 fixtures_dir = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture
-def dataframe_from_dict(request):
+def dataframe_from_dict(request):  # pylint: disable=missing-function-docstring
     return pandas.DataFrame(request.param)
 
 
@@ -24,11 +23,12 @@ def pickled_dict():  # pylint: disable=missing-function-docstring
     return "dict.pkl"
 
 
-class FakeS3Client(object):
+class FakeS3Client:  # pylint: disable=too-few-public-methods
     """
     Fake object to minic boto3 S3 client.
     """
-    def download_file(*args, **kwargs):
+
+    def download_file(self, *args, **kwargs):  # pylint: disable=missing-function-docstring, unused-argument
         return
 
 
@@ -45,7 +45,9 @@ def test_get_simulation_date(monkeypatch):  # pylint: disable=missing-function-d
     assert get_simulation_date(current_timestamp) == expected_simulation_date
 
 
-def test_read_pandas_asset(monkeypatch, mocker, pickled_dataframe):  # pylint: disable=missing-function-docstring
+def test_read_pandas_asset(
+    monkeypatch, mocker, pickled_dataframe
+):  # pylint: disable=missing-function-docstring
 
     monkeypatch.setattr(settings, "WORKFLOW_DATA_BUCKET", fixtures_dir)
     monkeypatch.setattr(settings, "LOCAL_DIR", fixtures_dir)
@@ -56,11 +58,12 @@ def test_read_pandas_asset(monkeypatch, mocker, pickled_dataframe):  # pylint: d
     assert isinstance(result, pandas.DataFrame)
 
 
-def test_read_no_pandas_asset(monkeypatch, mocker, pickled_dict):  # pylint: disable=missing-function-docstring
+def test_read_no_pandas_asset(
+    monkeypatch, mocker, pickled_dict
+):  # pylint: disable=missing-function-docstring
 
     monkeypatch.setattr(settings, "WORKFLOW_DATA_BUCKET", fixtures_dir)
     monkeypatch.setattr(settings, "LOCAL_DIR", fixtures_dir)
-
 
     mocker.patch("boto3.client", return_value=FakeS3Client())
 
@@ -69,45 +72,46 @@ def test_read_no_pandas_asset(monkeypatch, mocker, pickled_dict):  # pylint: dis
 
 
 @pytest.mark.parametrize(
-        "dataframe_from_dict, expected_outputs, skip, max_categorical_nunique",
-        [
-            (
-                {"A": [1, 2, 3], "B": [4, 5, 6], "C": [7, 8, 9]},
-                {"categorical": [], "text": [], "numerical": ["A", "B", "C"]},
-                None,
-                10
-            ),
-            (
-                {"A": ["a", "b", "c"], "B": ["d", "e", "f"], "C": ["g", "h", "i"]},
-                {"categorical": ["A", "B", "C"], "text": [], "numerical": []},
-                None,
-                10
-            ),
-            (
-                {"A": [1, 2, 3], "B": ["d", "e", "f"], "C": ["g", "h", "i"]},
-                {"categorical": ["B", "C"], "text": [], "numerical": ["A"]},
-                None,
-                10
-            ),
-            (
-                {"A": [1, 2, 3], "B": ["d", "e", "f"], "C": ["g", "h", "i"]},
-                {"categorical": ["B", "C"], "text": [], "numerical": []},
-                ["A"],
-                10
-            ),
-            (
-                {"A": ["a", "a", "a"], "B": ["d", "e", "f"], "C": ["g", "h", "i"]},
-                {"categorical": ["A"], "text": ["B", "C"], "numerical": []},
-                None,
-                2
-            )
-        ],
-        indirect=["dataframe_from_dict"]
+    "dataframe_from_dict, expected_outputs, skip, max_categorical_nunique",
+    [
+        (
+            {"A": [1, 2, 3], "B": [4, 5, 6], "C": [7, 8, 9]},
+            {"categorical": [], "text": [], "numerical": ["A", "B", "C"]},
+            None,
+            10,
+        ),
+        (
+            {"A": ["a", "b", "c"], "B": ["d", "e", "f"], "C": ["g", "h", "i"]},
+            {"categorical": ["A", "B", "C"], "text": [], "numerical": []},
+            None,
+            10,
+        ),
+        (
+            {"A": [1, 2, 3], "B": ["d", "e", "f"], "C": ["g", "h", "i"]},
+            {"categorical": ["B", "C"], "text": [], "numerical": ["A"]},
+            None,
+            10,
+        ),
+        (
+            {"A": [1, 2, 3], "B": ["d", "e", "f"], "C": ["g", "h", "i"]},
+            {"categorical": ["B", "C"], "text": [], "numerical": []},
+            ["A"],
+            10,
+        ),
+        (
+            {"A": ["a", "a", "a"], "B": ["d", "e", "f"], "C": ["g", "h", "i"]},
+            {"categorical": ["A"], "text": ["B", "C"], "numerical": []},
+            None,
+            2,
+        ),
+    ],
+    indirect=["dataframe_from_dict"],
 )
-def test_infer_feature_types(dataframe_from_dict, expected_outputs, skip, max_categorical_nunique):  # pylint: disable=missing-function-docstring
+def test_infer_feature_types(
+    dataframe_from_dict, expected_outputs, skip, max_categorical_nunique
+):  # pylint: disable=missing-function-docstring
 
-    assert infer_feature_types(
-        dataframe_from_dict, 
-        skip, 
-        max_categorical_nunique
-    ) == expected_outputs
+    assert (
+        infer_feature_types(dataframe_from_dict, skip, max_categorical_nunique)
+        == expected_outputs
+    )

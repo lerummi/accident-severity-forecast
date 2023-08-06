@@ -1,25 +1,25 @@
-import pytest
-import pandas
 from pathlib import Path
-import boto3
 
-
-from workflows.helpers.utils import (
-    load_yaml, 
-    infer_catboost_feature_types, 
-    read_partitioned_pandas_asset
-)
+import pandas
+import pytest
 from workflows.config import settings
-
+from workflows.helpers.utils import (
+    infer_catboost_feature_types,
+    load_yaml,
+    read_partitioned_pandas_asset,
+)
 
 fixtures_dir = Path(__file__).parent / "fixtures"
 
 
-class FakeS3Client(object):
+class FakeS3Client:  # pylint: disable=too-few-public-methods
     """
     Fake object to minic boto3 S3 client.
     """
-    def download_file(*args, **kwargs):
+
+    def download_file(
+        self, *args, **kwargs
+    ):  # pylint: disable=missing-function-docstring, unused-argument
         return
 
 
@@ -51,22 +51,19 @@ def test_load_yaml(yaml_file):  # pylint: disable=missing-function-docstring
 
 
 def test_infer_catboost_feature_types():  # pylint: disable=missing-function-docstring
-    data = pandas.DataFrame({
-        "col1": ["a", "a", "b"],
-        "col2": [1, 2, 3],
-        "col3": ["x", "y", "z"]
-    })
+    data = pandas.DataFrame(
+        {"col1": ["a", "a", "b"], "col2": [1, 2, 3], "col3": ["x", "y", "z"]}
+    )
 
-    expected_result = {
-        "categorical": ["col1"],
-        "text": ["col3"]
-    }
+    expected_result = {"categorical": ["col1"], "text": ["col3"]}
 
     result = infer_catboost_feature_types(data, max_categorical_nunique=2)
     assert result == expected_result
 
 
-def test_read_partitioned_pandas_asset(monkeypatch, mocker, pickled_dataframe):  # pylint: disable=missing-function-docstring
+def test_read_partitioned_pandas_asset(
+    monkeypatch, mocker, pickled_dataframe
+):  # pylint: disable=missing-function-docstring
 
     monkeypatch.setattr(settings, "WORKFLOW_DATA_BUCKET", fixtures_dir)
     monkeypatch.setattr(settings, "LOCAL_FOLDER", fixtures_dir)
@@ -78,7 +75,9 @@ def test_read_partitioned_pandas_asset(monkeypatch, mocker, pickled_dataframe): 
     assert isinstance(result, pandas.DataFrame)
 
 
-def test_read_partitioned_no_pandas_asset(monkeypatch, mocker, pickled_dict):  # pylint: disable=missing-function-docstring
+def test_read_partitioned_no_pandas_asset(
+    monkeypatch, mocker, pickled_dict
+):  # pylint: disable=missing-function-docstring
 
     monkeypatch.setattr(settings, "WORKFLOW_DATA_BUCKET", fixtures_dir)
     monkeypatch.setattr(settings, "LOCAL_FOLDER", fixtures_dir)

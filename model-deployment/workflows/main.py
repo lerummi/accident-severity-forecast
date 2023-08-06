@@ -1,11 +1,10 @@
 import json
-import os
 from typing import List
 
 import mlflow
 from fastapi import FastAPI, HTTPException, Response
-from workflows.models import Predictions, input_signature_to_schema
 from workflows.config import settings
+from workflows.models import Predictions, input_signature_to_schema
 
 model_name = settings.MODEL_NAME
 model_version = settings.MODEL_VERSION

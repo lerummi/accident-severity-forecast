@@ -1,12 +1,11 @@
 import datetime
 import time
-from typing import List
 from pathlib import Path
+from typing import List
 
 import boto3
 import pandas
 from botocore.exceptions import ClientError
-
 from workflows.config import settings
 
 

@@ -23,7 +23,9 @@ def example_yaml() -> str:  # pylint: disable=missing-function-docstring
 
 
 @pytest.fixture
-def test_dataframe_handler() -> Dict[str, Any]:  # pylint: disable=missing-function-docstring
+def test_dataframe_handler() -> Dict[  # pylint: disable=missing-function-docstring
+    str, Any
+]:
     return {
         "file": "test-dataframe.csv",
         "scope": "test",
@@ -35,7 +37,7 @@ def test_dataframe_handler() -> Dict[str, Any]:  # pylint: disable=missing-funct
 @pytest.mark.usefixtures("example_yaml")
 def test_load_yaml(example_yaml):  # pylint: disable=missing-function-docstring
     result = load_yaml(fixtures_dir / example_yaml)
-    expected = eval(result.pop("expected_foo"))
+    expected = eval(result.pop("expected_foo"))  # pylint: disable=eval-used
     assert result == expected
 
 
@@ -54,17 +56,22 @@ def test_runcmd(example_yaml):  # pylint: disable=missing-function-docstring
         (pandas.Series(["a", "b", "c"]), False),  # Negative test case
     ],
 )
-def test_is_numeric_or_datelike(series, expected):  # pylint: disable=missing-function-docstring
+def test_is_numeric_or_datelike(
+    series, expected
+):  # pylint: disable=missing-function-docstring
     assert is_numeric_or_datelike(series) == expected
 
 
 def test_fillna_categorical():  # pylint: disable=missing-function-docstring
     df = pandas.DataFrame(["a", "b", None], columns=[0])
+    df = fillna_categorical(df)
     assert not sum(df.isna())
 
 
 @pytest.mark.usefixtures("test_dataframe_handler")
-def test_download_raw_files(monkeypatch, mocker, test_dataframe_handler):  # pylint: disable=missing-function-docstring
+def test_download_raw_files(
+    monkeypatch, mocker, test_dataframe_handler
+):  # pylint: disable=missing-function-docstring
 
     mocker.patch("workflows.utils.runcmd", return_value=("nothing", "nothing"))
     monkeypatch.setattr(settings, "DATA_DIR", fixtures_dir)

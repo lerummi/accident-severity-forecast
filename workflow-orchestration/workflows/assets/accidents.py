@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Dict
 
@@ -262,7 +261,7 @@ def accidents_vehicles_casualties_preprocessed(
             X[column],
             settings.CATEGORIZATION_BIN_ENDGES,
             labels=list(map(agg, range(settings.CATEGORIZATION_BIN_ENDGES))),
-            duplicates="drop"
+            duplicates="drop",
         ).astype(object)
 
     # Transform data(-time) columns

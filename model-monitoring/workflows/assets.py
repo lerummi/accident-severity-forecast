@@ -8,11 +8,9 @@ from dagster import (
     asset,
     get_dagster_logger,
 )
-
+from workflows.config import settings
 from workflows.inference import make_prediction
 from workflows.utils import get_simulation_date, infer_feature_types, read_pandas_asset
-from workflows.config import settings
-
 
 inc = int(settings.EVAL_SCHEDULER_INCREMENT)
 

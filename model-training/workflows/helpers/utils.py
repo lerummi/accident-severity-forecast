@@ -7,7 +7,6 @@ import pandas
 import yaml
 from botocore.exceptions import ClientError
 from pandas.core.dtypes.dtypes import CategoricalDtype
-
 from workflows.config import settings
 
 

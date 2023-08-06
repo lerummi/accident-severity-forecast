@@ -1,11 +1,13 @@
-from pathlib import Path
 from typing import List
 
 import numpy as np
 from pydantic import BaseSettings, Field
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings):  # pylint: disable=too-few-public-methods
+    """
+    Settings for service.
+    """
 
     DATA_DIR: str = Field("/tmp/accidents_data", env="DATA_DIR")
     CONFIG_DIR: str = Field("/tmp/accidents_data/config", env="CONFIG_DIR")

@@ -1,17 +1,18 @@
-import mlflow
 import pytest
-
 from fastapi.testclient import TestClient
 
 
 @pytest.fixture
 def test_app_client(mocker, test_model):  # pylint: disable=missing-function-docstring
     mocker.patch("mlflow.pyfunc.load_model", return_value=test_model)
-    from workflows.main import app
+    from workflows.main import app  # pylint: disable=import-outside-toplevel
+
     return TestClient(app)
 
 
-def test_predict_endpoint(test_app_client):  # pylint: disable=missing-function-docstring
+def test_predict_endpoint(
+    test_app_client,
+):  # pylint: disable=missing-function-docstring
 
     client = test_app_client
 
@@ -28,7 +29,9 @@ def test_predict_endpoint(test_app_client):  # pylint: disable=missing-function-
     assert "predictions" in response.json()
 
 
-def test_get_model_info_endpoint(test_app_client):  # pylint: disable=missing-function-docstring
+def test_get_model_info_endpoint(
+    test_app_client,
+):  # pylint: disable=missing-function-docstring
     # Send a GET request to the get_model_info endpoint
     response = test_app_client.get("/info/")
 

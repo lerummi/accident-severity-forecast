@@ -1,7 +1,7 @@
 import subprocess
+from logging import Logger
 from pathlib import Path
 from typing import Union
-from logging import Logger
 
 import pandas
 import yaml
@@ -10,7 +10,6 @@ from pandas.api.types import (
     is_numeric_dtype,
     is_timedelta64_dtype,
 )
-
 from workflows.config import settings
 
 
