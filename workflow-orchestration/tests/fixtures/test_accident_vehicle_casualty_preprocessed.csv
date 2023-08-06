@@ -1,0 +1,10 @@
+vehicle.vehicle_type,vehicle.engine_capacity_cc,vehicle.propulsion_code,vehicle.age_of_vehicle,vehicle.vehicle_left_hand_drive,vehicle.towing_and_articulation,vehicle.vehicle_manoeuvre,accident.latitude,accident.longitude,accident.first_road_class,accident.n_vehicles,accident.month,accident.weekday,accident.hour,date,target
+8.0 2.0,None vehicle.engine_capacity_cc#0,nan 1.0,None vehicle.age_of_vehicle#0,1.0 1.0,0.0 0.0,6.0 18.0,51.584754,-0.279323,3,2.0,11,1,2.5,2016-11-01,3.0
+9.0,vehicle.engine_capacity_cc#0,2.0,vehicle.age_of_vehicle#0,1.0,0.0,18.0,51.449595,0.184928,3,1.0,11,1,0.6166666666666667,2016-11-01,3.0
+9.0,vehicle.engine_capacity_cc#0,1.0,vehicle.age_of_vehicle#0,1.0,0.0,18.0,51.543563,-0.473837,3,1.0,11,1,1.4166666666666667,2016-11-01,3.0
+11.0,vehicle.engine_capacity_cc#1,2.0,vehicle.age_of_vehicle#1,1.0,0.0,18.0,51.404958,-0.164442,3,1.0,11,1,9.25,2016-11-01,3.0
+9.0 1.0,vehicle.engine_capacity_cc#0 None,1.0 nan,vehicle.age_of_vehicle#1 None,1.0 1.0,0.0 0.0,12.0 18.0,51.483139,-0.40658,3,2.0,11,1,7.883333333333334,2016-11-01,3.0
+9.0 9.0,vehicle.engine_capacity_cc#0 vehicle.engine_capacity_cc#0,1.0 1.0,vehicle.age_of_vehicle#1 vehicle.age_of_vehicle#0,1.0 1.0,0.0 0.0,18.0 18.0,51.387813,-0.121004,3,2.0,11,1,9.483333333333333,2016-11-01,3.0
+nan,None,nan,None,nan,nan,nan,51.517333,-0.162234,5,0.0,11,1,8.883333333333333,2016-11-01,0.0
+nan,None,nan,None,nan,nan,nan,51.590341,-0.213859,3,0.0,11,1,10.083333333333334,2016-11-01,0.0
+nan,None,nan,None,nan,nan,nan,51.510716,-0.205302,4,0.0,11,1,9.85,2016-11-01,0.0

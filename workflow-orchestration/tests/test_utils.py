@@ -60,7 +60,7 @@ def test_is_numeric_or_datelike(series, expected):  # pylint: disable=missing-fu
 
 def test_fillna_categorical():  # pylint: disable=missing-function-docstring
     df = pandas.DataFrame(["a", "b", None], columns=[0])
-    assert not df.isna().any().any()
+    assert not sum(df.isna())
 
 
 @pytest.mark.usefixtures("test_dataframe_handler")

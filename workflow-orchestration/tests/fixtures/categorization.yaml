@@ -1,0 +1,40 @@
+spatiotemporal_properties:
+  - accident.date
+  - accident.time
+  - accident.latitude
+  - accident.longitude
+vehicle_properties:
+  - vehicle.vehicle_type
+  - vehicle.engine_capacity_cc
+  - vehicle.propulsion_code
+  - vehicle.age_of_vehicle
+  - vehicle.vehicle_left_hand_drive
+  - vehicle.towing_and_articulation
+  - vehicle.vehicle_manoeuvre
+driver_properties:
+  - vehicle.journey_purpose_of_driver
+  - vehicle.sex_of_driver
+  - vehicle.age_of_driver
+  - vehicle.driver_imd_decile
+  - vehicle.driver_home_area_type
+environmental_properties:
+  - accident.first_road_class
+accident_properties:
+  - vehicle.skidding_and_overturning
+  - vehicle.hit_object_in_carriageway
+  - vehicle.vehicle_leaving_carriageway
+  - vehicle.hit_object_off_carriageway
+  - vehicle.first_point_of_impact
+casualty_properties:
+  - casualty.casualty_class
+  - casualty.sex_of_casualty
+  - casualty.age_of_casualty
+  - casualty.casualty_severity
+  - casualty.pedestrian_location
+  - casualty.pedestrian_movement
+  - casualty.car_passenger
+  - casualty.bus_or_coach_passenger
+  - casualty.pedestrian_road_maintenance_worker
+  - casualty.casualty_type
+  - casualty.casualty_home_area_type
+  - casualty.casualty_imd_decile

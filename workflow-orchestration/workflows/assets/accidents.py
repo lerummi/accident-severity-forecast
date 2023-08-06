@@ -10,8 +10,6 @@ from workflows.utils import download_raw_files, fillna_categorical, load_yaml, r
 
 years = settings.YEARS_TO_PROCESS
 
-categorization = load_yaml(Path(os.environ["CONFIG_DIR"]) / "categorization.yaml")
-
 
 @asset(
     partitions_def=StaticPartitionsDefinition(years),
@@ -228,6 +226,8 @@ def accidents_vehicles_casualties_preprocessed(
     Apply preprocessing on dataset to enable machine learning model application.
     """
 
+    categorization = load_yaml(Path(settings.CONFIG_DIR) / "categorization.yaml")
+
     X = accidents_vehicles_casualties_unify
     X = X.set_index("accident.accident_index")
 
@@ -260,8 +260,9 @@ def accidents_vehicles_casualties_preprocessed(
         )
         X[column] = pandas.qcut(
             X[column],
-            10,
-            labels=list(map(agg, range(10))),
+            settings.CATEGORIZATION_BIN_ENDGES,
+            labels=list(map(agg, range(settings.CATEGORIZATION_BIN_ENDGES))),
+            duplicates="drop"
         ).astype(object)
 
     # Transform data(-time) columns
