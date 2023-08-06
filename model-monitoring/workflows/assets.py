@@ -1,7 +1,7 @@
 import os
 
 import pandas
-import requests
+from botocore.exceptions import ClientError
 from dagster import (
     AssetKey,
     AutoMaterializePolicy,
@@ -26,14 +26,13 @@ accidents_vehicles_casualties_dataset = SourceAsset(
 
 @asset(group_name="reference", io_manager_key="db_io_manager", compute_kind="postgres")
 def reference_accidents_dataset(
-    context, accidents_vehicles_casualties_dataset
+    accidents_vehicles_casualties_dataset,
 ) -> pandas.DataFrame:
     """
     Filter accidents associated with the training data. Only use 10000
     datapoints to make evaluation with evidently applicable.
     """
 
-    logger = get_dagster_logger()
     X = accidents_vehicles_casualties_dataset
     X = X[X["date"] < pandas.to_datetime(os.environ["SIMULATION_START_DATE"])]
     X = X.sample(n=10000)
@@ -44,9 +43,7 @@ def reference_accidents_dataset(
 
 
 @asset(group_name="reference", io_manager_key="db_io_manager", compute_kind="postgres")
-def reference_accidents_predictions(
-    context, reference_accidents_dataset
-) -> pandas.DataFrame:
+def reference_accidents_predictions(reference_accidents_dataset) -> pandas.DataFrame:
     """
     For reference accident data request prediction from model.
     """
@@ -64,9 +61,7 @@ def reference_accidents_predictions(
     freshness_policy=FreshnessPolicy(maximum_lag_minutes=int(inc)),
     auto_materialize_policy=AutoMaterializePolicy.eager(),
 )
-def recent_interval_processor(
-    context,
-) -> pandas.Series:
+def recent_interval_processor() -> pandas.Series:
     """Reminded date interval already processed"""
 
     current_date = get_simulation_date()
@@ -81,7 +76,7 @@ def recent_interval_processor(
 
         processed["last_processed_date"] = processed["current_date"]
         processed["current_date"] = current_date
-    except:
+    except (ClientError, ValueError):
         logger.info("Defaulting to initialization of processing dates.")
         processed = pandas.Series(
             [pandas.to_datetime(os.environ["SIMULATION_START_DATE"]), current_date],
@@ -101,7 +96,8 @@ def recent_interval_processor(
     auto_materialize_policy=AutoMaterializePolicy.eager(),
 )
 def recent_accidents_dataset(
-    context, recent_interval_processor, accidents_vehicles_casualties_dataset
+    recent_interval_processor,  # pylint: disable=unused-argument
+    accidents_vehicles_casualties_dataset,
 ) -> pandas.DataFrame:
     """
     Filter accidents according to date interval to simulate time evolution.
@@ -127,7 +123,7 @@ def recent_accidents_dataset(
     freshness_policy=FreshnessPolicy(maximum_lag_minutes=int(inc)),
     auto_materialize_policy=AutoMaterializePolicy.eager(),
 )
-def recent_accidents_predictions(context, recent_accidents_dataset) -> pandas.DataFrame:
+def recent_accidents_predictions(recent_accidents_dataset) -> pandas.DataFrame:
     """
     For new accident data request prediction from model.
     """
@@ -135,7 +131,7 @@ def recent_accidents_predictions(context, recent_accidents_dataset) -> pandas.Da
     logger = get_dagster_logger()
 
     # Only process, if recent accidents are available
-    if not len(recent_accidents_dataset):
+    if recent_accidents_dataset.empty:
         logger.info("No accidents found! Skipping.")
         return pandas.DataFrame()
 
@@ -151,7 +147,6 @@ def recent_accidents_predictions(context, recent_accidents_dataset) -> pandas.Da
     auto_materialize_policy=AutoMaterializePolicy.eager(),
 )
 def recent_evidently_report(
-    context,
     reference_accidents_dataset,
     reference_accidents_predictions,
     recent_accidents_dataset,
@@ -165,49 +160,43 @@ def recent_evidently_report(
     logger = get_dagster_logger()
 
     # Only process, if recent accidents are available
-    if not len(recent_accidents_dataset):
+    if recent_accidents_dataset.empty:
         logger.info("No accidents found! Skipping.")
         return pandas.DataFrame()
 
-    # TODO: For some reason loading evidently takes ages. By shifting the
+    # For some reason loading evidently takes ages. By shifting the
     # import into this module, it is only loaded from the specific asset
     # materialization is happening.
-    logger.info("Busy importing evidently.")
-    from evidently import ColumnMapping
-    from evidently.metrics import (
-        ColumnDriftMetric,
-        DatasetDriftMetric,
-        DatasetMissingValuesMetric,
-    )
-    from evidently.report import Report
+    logger.info("Busy loading report tools")
+    from .report import make_evidently_report
 
-    logger.info("Finished importing evidently.")
+    logger.info("Finished importing")
 
     dtypes = infer_feature_types(
         reference_accidents_dataset, skip=["date", "accident.accident_index"]
     )
 
-    # TODO: Remove all text columns, because this seems to make problems in
+    # Remove all text columns, because this seems to make problems in
     # evidently
     for column in dtypes["text"]:
         recent_accidents_dataset.pop(column)
         reference_accidents_dataset.pop(column)
     dtypes.pop("text")
 
-    report = Report(
-        metrics=[
-            ColumnDriftMetric(column_name="predictions"),
-            DatasetDriftMetric(),
-            DatasetMissingValuesMetric(),
-        ]
-    )
+    # report = Report(
+    #     metrics=[
+    #         ColumnDriftMetric(column_name="predictions"),
+    #         DatasetDriftMetric(),
+    #         DatasetMissingValuesMetric(),
+    #     ]
+    # )
 
-    column_mapping = ColumnMapping(
-        target=None,
-        prediction="predictions",
-        numerical_features=dtypes["numerical"],
-        categorical_features=dtypes["categorical"],
-    )
+    # column_mapping = ColumnMapping(
+    #     target=None,
+    #     prediction="predictions",
+    #     numerical_features=dtypes["numerical"],
+    #     categorical_features=dtypes["categorical"],
+    # )
 
     # Create evaluation dataset by merging recent_accidents to predictions
     reference_data = reference_accidents_dataset.merge(
@@ -216,47 +205,51 @@ def recent_evidently_report(
         how="left",
         suffixes=("", "_p"),
     )
-    eval_data = recent_accidents_dataset.merge(
+    evaluation_data = recent_accidents_dataset.merge(
         recent_accidents_predictions,
         on="accident.accident_index",
         how="left",
         suffixes=("", "_p"),
     )
 
-    start_date = eval_data["date"].min()
-    end_date = eval_data["date"].max()
+    results = make_evidently_report(
+        reference_data, evaluation_data, column_dtypes=dtypes, logger=logger
+    )
 
-    logger.info(f"Creating reports for date interval: [{start_date, end_date}]")
+    # start_date = eval_data["date"].min()
+    # end_date = eval_data["date"].max()
 
-    results = []
-    for date in pandas.date_range(start=start_date, end=end_date):
-        eval_single = eval_data[eval_data["date"] == date]
+    # logger.info(f"Creating reports for date interval: [{start_date, end_date}]")
 
-        logger.info(f"Creating report for {date} with {len(eval_single)} events.")
+    # results = []
+    # for date in pandas.date_range(start=start_date, end=end_date):
+    #     eval_single = eval_data[eval_data["date"] == date]
 
-        if not len(eval_single):
-            continue
+    #     logger.info(f"Creating report for {date} with {len(eval_single)} events.")
 
-        report.run(
-            reference_data=reference_data,
-            current_data=eval_single,
-            column_mapping=column_mapping,
-        )
+    #     if eval_single.empty:
+    #         continue
 
-        metrics = report.as_dict()["metrics"]
+    #     report.run(
+    #         reference_data=reference_data,
+    #         current_data=eval_single,
+    #         column_mapping=column_mapping,
+    #     )
 
-        # Report to dictionary for later db insert
-        results.append(
-            {
-                "date": date,
-                "prediction_drift": metrics[0]["result"]["drift_score"],
-                "num_drifted_columns": (
-                    metrics[1]["result"]["number_of_drifted_columns"]
-                ),
-                "share_missing_values": (
-                    metrics[2]["result"]["current"]["share_of_missing_values"]
-                ),
-            }
-        )
+    #     metrics = report.as_dict()["metrics"]
+
+    #     # Report to dictionary for later db insert
+    #     results.append(
+    #         {
+    #             "date": date,
+    #             "prediction_drift": metrics[0]["result"]["drift_score"],
+    #             "num_drifted_columns": (
+    #                 metrics[1]["result"]["number_of_drifted_columns"]
+    #             ),
+    #             "share_missing_values": (
+    #                 metrics[2]["result"]["current"]["share_of_missing_values"]
+    #             ),
+    #         }
+    #     )
 
     return pandas.DataFrame(results)

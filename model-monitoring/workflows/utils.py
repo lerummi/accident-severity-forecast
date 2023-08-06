@@ -5,12 +5,14 @@ from typing import List
 
 import boto3
 import pandas
+from botocore.exceptions import ClientError
 
 
 def get_simulation_date():
     """
     Establish time warp by updating simulated date starting from
-    SIMULATION_START_DATE based on the number of days passing per (real) second, i.e. SECONDS_PER_DAY.
+    SIMULATION_START_DATE based on the number of days passing per (real
+    second, i.e. SECONDS_PER_DAY.
     """
 
     simulation_date = pandas.to_datetime(os.environ["SIMULATION_START_DATE"])
@@ -38,16 +40,16 @@ def read_pandas_asset(asset: str) -> pandas.DataFrame:
         s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER + asset)
         with open(LOCAL_FOLDER + asset, "rb") as input_file:
             data = pandas.read_pickle(input_file)
-    except Exception as e:
+    except ClientError as e:
         print(asset, "- failed to download from S3, so terminate.")
         print(e)
         raise e
     if not isinstance(data, (pandas.DataFrame, pandas.Series)):
         exception_message = (
-            asset + "- is not a pandas DataFrame, strange, raise Exception"
+            f"{asset} - is not a pandas DataFrame, strange, raise Exception"
         )
         print(exception_message)
-        raise Exception(exception_message)
+        raise ImportError(exception_message)
     # here you can check the columns of the DataFrame
     print(asset, "- downloaded OK, passed checks")
 
@@ -57,6 +59,10 @@ def read_pandas_asset(asset: str) -> pandas.DataFrame:
 def infer_feature_types(
     X: pandas.DataFrame, skip: List = None, max_categorical_nunique: int = 10
 ):
+    """
+    Automatically infer the datatypes numerical, categorical, and text from
+    input DataFrame.
+    """
 
     categorical = []
     text = []

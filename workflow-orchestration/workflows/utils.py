@@ -11,12 +11,12 @@ from pandas.api.types import (
 )
 
 
-def runcmd(cmd, *args, **kwargs):
+def runcmd(cmd):
     """
     Run unix command in python function.
     """
 
-    process = subprocess.Popen(
+    process = subprocess.Popen(  # pylint: disable=consider-using-with
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=True
     )
     std_out, std_err = process.communicate()
@@ -25,6 +25,9 @@ def runcmd(cmd, *args, **kwargs):
 
 
 def is_numeric_or_datelike(series: pandas.Series) -> bool:
+    """
+    Infer probable datelike behavior for time series.
+    """
     return (
         is_numeric_dtype(series)
         | is_datetime64_any_dtype(series)
@@ -33,13 +36,19 @@ def is_numeric_or_datelike(series: pandas.Series) -> bool:
 
 
 def load_yaml(yamlfile: Union[Path, str]):
+    """
+    Load yaml file.
+    """
     if isinstance(yamlfile, str):
         yamlfile = Path(str)
 
-    return yaml.safe_load(yamlfile.read_text())
+    return yaml.safe_load(yamlfile.read_text())  # pylint: disable=unspecified-encoding
 
 
 def fillna_categorical(X: pandas.DataFrame):
+    """
+    For all categorical columns replace nan by 'None'.
+    """
     for column in X:
         if X[column].dtype == object:
             X[column] = X[column].fillna("None")

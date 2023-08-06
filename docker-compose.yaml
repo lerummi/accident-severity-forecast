@@ -130,7 +130,6 @@ services:
     volumes:
       - "./data:/home/jovyan/data"
       - "./config:/home/jovyan/config"
-      - "./model-tracking-registry/mlartifacts:/mlartifacts"
       - "./notebooks:/home/jovyan/work"
       - "./model-training:/home/jovyan/code"
     env_file:

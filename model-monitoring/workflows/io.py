@@ -1,6 +1,5 @@
 import pandas
 from dagster import (
-    Field,
     InitResourceContext,
     InputContext,
     IOManager,
@@ -8,13 +7,19 @@ from dagster import (
     StringSource,
     io_manager,
 )
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 
 from .utils import read_pandas_asset
 
 
 class PostgresDataframeIOManager(IOManager):
-    def __init__(self, uid: str, pwd: str, server: str, db: str, port: str):
+    """
+    Persist fixed assets in postgres database.
+    """
+
+    def __init__(
+        self, uid: str, pwd: str, server: str, db: str, port: str
+    ):  # pylint: disable=too-many-arguments
         # credentials passed to IO Manager
         self.uid = uid
         self.pwd = pwd
@@ -23,8 +28,11 @@ class PostgresDataframeIOManager(IOManager):
         self.port = port
 
     def handle_output(self, context: OutputContext, obj: pandas.DataFrame):
+        """
+        Define output asset handling.
+        """
         # Skip handling if the output is empty
-        if not len(obj):
+        if obj.empty:
             return
 
         table_name = context.asset_key.to_python_identifier()
@@ -41,6 +49,9 @@ class PostgresDataframeIOManager(IOManager):
         context.add_output_metadata({"db": self.db, "table_name": table_name})
 
     def load_input(self, context: InputContext):
+        """
+        Define handling when loading the asset by the downstream process.
+        """
         # upstream_output.asset_key is the asset key given to the Out that we're loading for
         table_name = context.upstream_output.asset_key.to_python_identifier()
 
@@ -56,9 +67,15 @@ class PostgresDataframeIOManager(IOManager):
 
 
 class RecentPostgresDataframeIOManager(PostgresDataframeIOManager):
+    """
+    Persist time-depend asset in timely variable postgres database. Depending
+    on the date state this class returns a different partition associated
+    with the recent time frame.
+    """
+
     def handle_output(self, context: OutputContext, obj: pandas.DataFrame):
         # Skip handling if the output is empty
-        if not len(obj):
+        if obj.empty:
             return
 
         table_name = context.asset_key.to_python_identifier()
@@ -107,6 +124,9 @@ class RecentPostgresDataframeIOManager(PostgresDataframeIOManager):
 def postgres_pandas_io_manager(
     init_context: InitResourceContext,
 ) -> PostgresDataframeIOManager:
+    """
+    Generate configurable io_manager from class.
+    """
     return PostgresDataframeIOManager(
         pwd=init_context.resource_config["pwd"],
         uid=init_context.resource_config["uid"],
@@ -128,6 +148,9 @@ def postgres_pandas_io_manager(
 def recent_postgres_pandas_io_manager(
     init_context: InitResourceContext,
 ) -> PostgresDataframeIOManager:
+    """
+    Generate configurable io_manager from class.
+    """
     return RecentPostgresDataframeIOManager(
         pwd=init_context.resource_config["pwd"],
         uid=init_context.resource_config["uid"],

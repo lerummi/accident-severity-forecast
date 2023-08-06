@@ -99,7 +99,7 @@ def raw_casualties(context) -> pandas.DataFrame:
     compute_kind="pandas",
 )
 def accidents_vehicles_merged(
-    context, raw_accidents: pandas.DataFrame, raw_vehicles: pandas.DataFrame
+    raw_accidents: pandas.DataFrame, raw_vehicles: pandas.DataFrame
 ) -> pandas.DataFrame:
     """
     Merged accidents and vehicles.
@@ -122,7 +122,6 @@ def accidents_vehicles_merged(
     compute_kind="pandas",
 )
 def accidents_vehicles_casualties_merged(
-    context,
     accidents_vehicles_merged: pandas.DataFrame,
     raw_casualties: pandas.DataFrame,
 ) -> pandas.DataFrame:
@@ -154,7 +153,7 @@ def accidents_vehicles_casualties_merged(
 
 
 @asset(group_name="1_download_source_datasets", io_manager_key="s3_io_manager")
-def categorical_mapping(context) -> pandas.DataFrame:
+def categorical_mapping() -> pandas.DataFrame:
     """
     Mapping of id in accident, vehicle and casualty data to labels."""
 
@@ -185,7 +184,6 @@ def categorical_mapping(context) -> pandas.DataFrame:
     compute_kind="pandas",
 )
 def accidents_vehicles_casualties_unify(
-    context,
     accidents_vehicles_casualties_merged: pandas.DataFrame,
     categorical_mapping: pandas.DataFrame,
 ) -> pandas.DataFrame:
@@ -218,7 +216,7 @@ def accidents_vehicles_casualties_unify(
     logger.info(f"Using the following decode_mapping: {decode_mapping}")
 
     X = accidents_vehicles_casualties_merged
-    for k, column in enumerate(X.columns):
+    for column in X.columns:
         if column in decode_mapping:
             logger.info(f"Decoding column: {column}")
             X[column] = X[column].replace(decode_mapping[column])
@@ -228,7 +226,7 @@ def accidents_vehicles_casualties_unify(
 
     # Unify column handling and correct errors
     oor = "Data missing or out of range"
-    logger.info(f"Unifying incorrect columns")
+    logger.info("Unifying incorrect columns")
     X["accident.speed_limit"].replace(oor, np.nan, inplace=True)
     X["vehicle.age_of_driver"].replace(oor, np.nan, inplace=True)
     X["vehicle.engine_capacity_cc"].replace(oor, np.nan, inplace=True)
@@ -261,7 +259,7 @@ def accidents_vehicles_casualties_unify(
     compute_kind="pandas",
 )
 def accidents_vehicles_casualties_preprocessed(
-    context, accidents_vehicles_casualties_unify: pandas.DataFrame
+    accidents_vehicles_casualties_unify: pandas.DataFrame,
 ) -> pandas.DataFrame:
     """
     Apply preprocessing on dataset to enable machine learning model application.
@@ -293,8 +291,14 @@ def accidents_vehicles_casualties_preprocessed(
     # Make vehicle columns categorical, so we can multiple vehicle properties
     # one row
     for column in ["vehicle.engine_capacity_cc", "vehicle.age_of_vehicle"]:
+
+        agg = (
+            lambda x: f"{column}#{x}"  # pylint: disable=unnecessary-lambda-assignment,cell-var-from-loop
+        )
         X[column] = pandas.qcut(
-            X[column], 10, labels=list(map(lambda x: f"{column}#{x}", range(10)))
+            X[column],
+            10,
+            labels=list(map(agg, range(10))),
         ).astype(object)
 
     # Transform data(-time) columns

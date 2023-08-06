@@ -5,25 +5,28 @@ from typing import Union
 import boto3
 import pandas
 import yaml
-from pandas.api.types import (
-    is_datetime64_any_dtype,
-    is_numeric_dtype,
-    is_timedelta64_dtype,
-)
+from botocore.exceptions import ClientError
 from pandas.core.dtypes.dtypes import CategoricalDtype
 
 
 def load_yaml(yamlfile: Union[Path, str]):
+    """
+    Load yaml into json representation.
+    """
 
     if isinstance(yamlfile, str):
         yamlfile = Path(str)
 
-    return yaml.safe_load(yamlfile.read_text())
+    return yaml.safe_load(yamlfile.read_text())  # pylint: disable=unspecified-encoding
 
 
 def infer_catboost_feature_types(
     X: pandas.DataFrame, max_categorical_nunique: int = 10
 ):
+    """
+    Automatically infer DataFrame column types for catboost estimator
+    parameter definition.
+    """
 
     categorical = []
     text = []
@@ -52,7 +55,7 @@ def read_partitioned_pandas_asset(asset: str) -> pandas.DataFrame:
         s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER + asset)
         with open(LOCAL_FOLDER + asset, "rb") as input_file:
             data = pandas.read_pickle(input_file)
-    except Exception as e:
+    except ClientError as e:
         print(asset, "- failed to download from S3, so terminate.")
         print(e)
         raise e
@@ -61,7 +64,7 @@ def read_partitioned_pandas_asset(asset: str) -> pandas.DataFrame:
             asset + "- is not a pandas DataFrame, strange, raise Exception"
         )
         print(exception_message)
-        raise Exception(exception_message)
+        raise ImportError(exception_message)
     # here you can check the columns of the DataFrame
     print(asset, "- downloaded OK, passed checks")
 

@@ -14,7 +14,7 @@ accidents_vehicles_casualties_dataset = SourceAsset(
 
 @asset(io_manager_key="s3_io_manager", compute_kind="pandas")
 def loaded_accidents_vehicles_casualties_dataset(
-    context, accidents_vehicles_casualties_dataset
+    accidents_vehicles_casualties_dataset,
 ) -> pandas.DataFrame:
     """
     Load complete dataset to make it available for training.

@@ -31,7 +31,7 @@ async def predict(data: List[input_signature]) -> Predictions:
     try:
         # Convert pydantic model to dict
         data = list(map(dict, data))
-        if not data:
+        if data:
             predictions = loaded_model.predict(data)
         else:  # Account for empty request body
             predictions = []
