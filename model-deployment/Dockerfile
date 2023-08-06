@@ -25,7 +25,7 @@ RUN pip install \
 RUN echo PATH=$PATH:/root/.local/bin >> ~/.bashrc
 RUN mkdir -p /opt/mlflow
 
-COPY app /app/app
+COPY workflows /appworkflows
 COPY start.sh /
 RUN chmod +x /start.sh
 

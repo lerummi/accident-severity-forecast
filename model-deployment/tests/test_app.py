@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 @pytest.fixture
 def test_app_client(mocker, test_model):  # pylint: disable=missing-function-docstring
     mocker.patch("mlflow.pyfunc.load_model", return_value=test_model)
-    from app.main import app
+    from workflows.main import app
     return TestClient(app)
 
 

@@ -1,6 +1,6 @@
 import pytest
 
-from app.models import type_convert, input_signature_to_schema
+from workflows.models import type_convert, input_signature_to_schema
 
 
 @pytest.mark.parametrize(

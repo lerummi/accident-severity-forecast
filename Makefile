@@ -32,6 +32,13 @@ pre-commit-install: ## set up the git hooks script
 pre-commit: ## run pre-commit hook script
 	pre-commit run --all-files || (printf "\n\n\n" && git --no-pager diff --color=always)
 
+
+##@ Apply unit test
+unit-tests: ## run unit-tests for all directory containing code
+	for directory in workflow-orchestration model-training model-deployment model-monitoring ; do \
+	    cd $$directory && poetry run pytest ./tests --cov=workflows && cd .. ; \
+	done
+
 ##@ Build stack
 build-compose: CARGS?=--profile all
 build-compose: DARGS?=--no-cache
