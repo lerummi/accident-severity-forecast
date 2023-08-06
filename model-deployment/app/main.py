@@ -4,10 +4,11 @@ from typing import List
 
 import mlflow
 from fastapi import FastAPI, HTTPException, Response
-from models import Predictions, input_signature_to_schema
+from app.models import Predictions, input_signature_to_schema
+from app.config import settings
 
-model_name = os.environ["MODEL_NAME"]
-model_version = os.environ["MODEL_VERSION"]
+model_name = settings.MODEL_NAME
+model_version = settings.MODEL_VERSION
 model_path = f"models:/{model_name}/{model_version}"
 
 app = FastAPI(

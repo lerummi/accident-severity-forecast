@@ -1,7 +1,6 @@
 import pytest
 import pandas
 from pathlib import Path
-from pandas.core.dtypes.dtypes import CategoricalDtype
 import boto3
 
 
@@ -17,12 +16,15 @@ fixtures_dir = Path(__file__).parent / "fixtures"
 
 
 class FakeS3Client(object):
+    """
+    Fake object to minic boto3 S3 client.
+    """
     def download_file(*args, **kwargs):
         return
 
 
 @pytest.fixture
-def yaml_file(tmp_path):
+def yaml_file(tmp_path):  # pylint: disable=missing-function-docstring
     yaml_data = """
     key1: value1
     key2: value2
