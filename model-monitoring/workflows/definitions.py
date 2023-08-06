@@ -4,9 +4,9 @@ from dagster import Definitions, load_assets_from_modules
 from dagster_aws.s3.io_manager import s3_pickle_io_manager
 from dagster_aws.s3.resources import s3_resource
 
-from . import assets, io
+from . import assets, io, config
 
-inc = settings.EVAL_SCHEDULER_INCREMENT
+inc = config.settings.EVAL_SCHEDULER_INCREMENT
 
 
 defs = Definitions(

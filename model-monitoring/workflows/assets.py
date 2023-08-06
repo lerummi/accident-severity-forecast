@@ -29,13 +29,13 @@ def reference_accidents_dataset(
     accidents_vehicles_casualties_dataset,
 ) -> pandas.DataFrame:
     """
-    Filter accidents associated with the training data. Only use 10000
+    Filter accidents associated with the training data. Only use a downsampled
     datapoints to make evaluation with evidently applicable.
     """
 
     X = accidents_vehicles_casualties_dataset
     X = X[X["date"] < pandas.to_datetime(settings.SIMULATION_START_DATE)]
-    X = X.sample(n=10000)
+    X = X.sample(n=settings.REFERENCE_DATA_SIZE)
 
     X.pop("target")
 

@@ -44,7 +44,6 @@ def pickled_dict():  # pylint: disable=missing-function-docstring
     return "dict.pkl"
 
 
-
 def test_load_yaml(yaml_file):  # pylint: disable=missing-function-docstring
     expected_result = {"key1": "value1", "key2": "value2"}
     result = load_yaml(yaml_file)

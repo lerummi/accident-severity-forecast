@@ -1,6 +1,7 @@
 import datetime
 import time
 from typing import List
+from pathlib import Path
 
 import boto3
 import pandas
@@ -9,7 +10,7 @@ from botocore.exceptions import ClientError
 from workflows.config import settings
 
 
-def get_simulation_date():
+def get_simulation_date(current_timestamp=None):
     """
     Establish time warp by updating simulated date starting from
     SIMULATION_START_DATE based on the number of days passing per (real
@@ -18,7 +19,8 @@ def get_simulation_date():
 
     simulation_date = pandas.to_datetime(settings.SIMULATION_START_DATE)
     initial_timestamp = float(settings.INITIAL_UNIX_TIMESTAMP)
-    current_timestamp = float(time.time())
+    if current_timestamp is None:
+        current_timestamp = float(time.time())
     seconds_per_day = float(settings.SECONDS_PER_DAY)
 
     days_gone = (current_timestamp - initial_timestamp) / seconds_per_day
@@ -33,13 +35,13 @@ def read_pandas_asset(asset: str) -> pandas.DataFrame:
     """
 
     BUCKET_NAME = settings.WORKFLOW_DATA_BUCKET
-    LOCAL_FOLDER = "/tmp/"
+    LOCAL_FOLDER = Path(settings.LOCAL_DIR)
 
     s3_client = boto3.client("s3", endpoint_url=settings.S3_ENDPOINT_URL)
 
     try:
-        s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER + asset)
-        with open(LOCAL_FOLDER + asset, "rb") as input_file:
+        s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER / asset)
+        with open(LOCAL_FOLDER / asset, "rb") as input_file:
             data = pandas.read_pickle(input_file)
     except ClientError as e:
         print(asset, "- failed to download from S3, so terminate.")
@@ -68,6 +70,9 @@ def infer_feature_types(
     categorical = []
     text = []
     numerical = []
+
+    if skip is None:
+        skip = []
 
     for column in X:
         if column in skip:

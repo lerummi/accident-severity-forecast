@@ -1,8 +1,9 @@
+import os
+
 import pandas
 import requests
 
 from workflows.config import settings
-
 
 predict_url = settings.PREDICT_URL
 
