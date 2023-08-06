@@ -1,9 +1,10 @@
-import os
-
 import pandas
 import requests
 
-predict_url = os.environ["PREDICT_URL"]
+from workflows.config import settings
+
+
+predict_url = settings.PREDICT_URL
 
 
 def make_prediction(X: pandas.DataFrame):

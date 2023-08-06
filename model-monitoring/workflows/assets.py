@@ -1,5 +1,3 @@
-import os
-
 import pandas
 from botocore.exceptions import ClientError
 from dagster import (
@@ -11,10 +9,12 @@ from dagster import (
     get_dagster_logger,
 )
 
-from .inference import make_prediction
-from .utils import get_simulation_date, infer_feature_types, read_pandas_asset
+from workflows.inference import make_prediction
+from workflows.utils import get_simulation_date, infer_feature_types, read_pandas_asset
+from workflows.config import settings
 
-inc = int(os.environ["EVAL_SCHEDULER_INCREMENT"])
+
+inc = int(settings.EVAL_SCHEDULER_INCREMENT)
 
 
 accidents_vehicles_casualties_dataset = SourceAsset(
@@ -34,7 +34,7 @@ def reference_accidents_dataset(
     """
 
     X = accidents_vehicles_casualties_dataset
-    X = X[X["date"] < pandas.to_datetime(os.environ["SIMULATION_START_DATE"])]
+    X = X[X["date"] < pandas.to_datetime(settings.SIMULATION_START_DATE)]
     X = X.sample(n=10000)
 
     X.pop("target")
@@ -49,7 +49,7 @@ def reference_accidents_predictions(reference_accidents_dataset) -> pandas.DataF
     """
 
     logger = get_dagster_logger()
-    logger.info(f"Requestion predictions from {os.environ['PREDICT_URL']}")
+    logger.info(f"Requestion predictions from {settings.PREDICT_URL}")
 
     return make_prediction(reference_accidents_dataset)
 
@@ -79,7 +79,7 @@ def recent_interval_processor() -> pandas.Series:
     except (ClientError, ValueError):
         logger.info("Defaulting to initialization of processing dates.")
         processed = pandas.Series(
-            [pandas.to_datetime(os.environ["SIMULATION_START_DATE"]), current_date],
+            [pandas.to_datetime(settings.SIMULATION_START_DATE), current_date],
             index=["last_processed_date", "current_date"],
         )
 
@@ -135,7 +135,7 @@ def recent_accidents_predictions(recent_accidents_dataset) -> pandas.DataFrame:
         logger.info("No accidents found! Skipping.")
         return pandas.DataFrame()
 
-    logger.info(f"Requestion predictions from {os.environ['PREDICT_URL']}")
+    logger.info(f"Requestion predictions from {settings.PREDICT_URL}")
     return make_prediction(recent_accidents_dataset)
 
 

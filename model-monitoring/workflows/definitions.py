@@ -6,7 +6,7 @@ from dagster_aws.s3.resources import s3_resource
 
 from . import assets, io
 
-inc = os.environ["EVAL_SCHEDULER_INCREMENT"]
+inc = settings.EVAL_SCHEDULER_INCREMENT
 
 
 defs = Definitions(

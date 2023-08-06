@@ -1,11 +1,12 @@
 import datetime
-import os
 import time
 from typing import List
 
 import boto3
 import pandas
 from botocore.exceptions import ClientError
+
+from workflows.config import settings
 
 
 def get_simulation_date():
@@ -15,10 +16,10 @@ def get_simulation_date():
     second, i.e. SECONDS_PER_DAY.
     """
 
-    simulation_date = pandas.to_datetime(os.environ["SIMULATION_START_DATE"])
-    initial_timestamp = float(os.environ["INITIAL_UNIX_TIMESTAMP"])
+    simulation_date = pandas.to_datetime(settings.SIMULATION_START_DATE)
+    initial_timestamp = float(settings.INITIAL_UNIX_TIMESTAMP)
     current_timestamp = float(time.time())
-    seconds_per_day = float(os.environ["SECONDS_PER_DAY"])
+    seconds_per_day = float(settings.SECONDS_PER_DAY)
 
     days_gone = (current_timestamp - initial_timestamp) / seconds_per_day
     days_gone = datetime.timedelta(days=days_gone)
@@ -31,10 +32,10 @@ def read_pandas_asset(asset: str) -> pandas.DataFrame:
     Download pickle DataFrame from S3 bucket and return it
     """
 
-    BUCKET_NAME = os.environ["WORKFLOW_DATA_BUCKET"]
+    BUCKET_NAME = settings.WORKFLOW_DATA_BUCKET
     LOCAL_FOLDER = "/tmp/"
 
-    s3_client = boto3.client("s3", endpoint_url=os.environ.get("S3_ENDPOINT_URL", None))
+    s3_client = boto3.client("s3", endpoint_url=settings.S3_ENDPOINT_URL)
 
     try:
         s3_client.download_file(BUCKET_NAME, asset, LOCAL_FOLDER + asset)
