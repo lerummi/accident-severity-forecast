@@ -71,6 +71,7 @@ section providing detailed information on the run properties, e.g. logs and run 
 When running, find the following instances:
 
 dagster UI: http://0.0.0.0:3000/asset-groups
+
 dagster runs: http://0.0.0.0:3000/runs
 
 ### 2. Manual training
@@ -89,6 +90,7 @@ to occur in future.
 When running, find the following instances:
 
 Jupyter server: http://0.0.0.0:8888
+
 MLFlow UI: http://0.0.0.0:5000
 
 ### 3. Training workflow
