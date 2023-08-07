@@ -68,7 +68,7 @@ simulation: MODEL_VERSION=
 simulation: ## Run time simulation starting at SIMULATION_START_DATE and continuously ingest data, make model inference, evaluate model and train model based on monitoring metrics drop. Parameter int SECONDS_PER_DAY describe, how many (real!) seconds are forming a day. Note, that providing a parameter MODEL_VERSION is mandatory.
 	export MODEL_VERSION=$(MODEL_VERSION) && \
 	export SECONDS_PER_DAY=$(SECONDS_PER_DAY) && \
-	docker-compose --profile simulation up --build && docker-compose rm -fsv
+	docker-compose --profile simulation up --build
 
 ##@ Create fresh environment
 fresh-env: ## Remove all volumes to create a new, fresh environemnt. NOTE, THAT ALL THE DATA CREATED IN PREVIOUS RUNS IS DELETED!
