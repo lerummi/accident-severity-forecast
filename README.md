@@ -52,7 +52,7 @@ In order to be able to use the project, the following requirements exist:
 #### 0. Run unit-tests
 
 ```
-make unit-test
+make unit-tests
 ```
 
 The output will show test results including code coverage logged to the console.
@@ -106,6 +106,7 @@ and log the model to _MLflow_.
 When running, find the following instances:
 
 dagster UI: http://0.0.0.0:3000/locations/model-training-using-workflow/asset-groups/model_training
+
 MLFlow UI: http://0.0.0.0:5000
 
 ### 4. Simulation
@@ -125,13 +126,14 @@ _"Auto-materialize on"_ in _dagster UI_. Assets in simulation mode are materiali
 database _inference_db_, which can be accessed using [Adminer](https://www.adminer.org/).
 
 dagster UI: http://0.0.0.0:3000/locations/model-application-simulation/asset-groups/recent
+
 Adminer: http://0.0.0.0:8080 (username: _postgres_user_, password: _postgres_password_)
 
 #### 4.2 Model inference
 
 As part of the simulation, an _model inference web server_ is exposed using [FastAPI](https://fastapi.tiangolo.com/).
 It is directly requested in one workflow step, but you can also play around with it. It exposes a [Swagger UI](https://swagger.io/tools/swagger-ui/)
-making it easy to drop some requests. Both the exposeed endpoints `/predict` and `/info` provide complete IO examples for you the experiment
+making it easy to drop some requests. Both the exposeed endpoints `/predict` and `/info` provide complete IO examples for you to experiment
 without any further knowledge about the model json schema.
 
 Model inference App: http://0.0.0.0:8000/docs
@@ -139,11 +141,13 @@ Model inference App: http://0.0.0.0:8000/docs
 #### 4.3 Model monitoring
 
 For monitoring the model performance, we utilize [Evidently AI](https://www.evidentlyai.com/), which
-is the last workflow step running in the pipeline. The report output, which is continuously created,
+is the last workflow step running in the pipeline. Take note, that _evidently_ requires _reference_data and \_evaluation_data_. For providing the _reference_ data, we use a subset of the training data.
+The report output, which is continuously created,
 is persisted in the _inference_db_. A [Grafana}(https://grafana.com/) instance is configured to
 read reports from _inference_db_ and create dashboads also continuously updated.
 
 Grafana: http://0.0.0.0:3030 (username: _admin_, password: _admin_)
+
 Monitoring Dashboards: http://0.0.0.0:3030/d/efbeb80f-e16a-4e1c-ba98-8f5ff862dfcc/accidents-severity-predictions
 
 # Further documention
