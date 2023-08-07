@@ -16,7 +16,8 @@ services:
       - ./data/s3:/data
     networks:
       - net
-    profiles: ["model-training", "workflow-orchestration", "simulation", "all"]
+    profiles:
+      ["ingestion", "training-manual", "training-workflow", "simulation", "all"]
 
   minio-init:
     image: minio/mc:RELEASE.2023-07-21T20-44-27Z
@@ -36,7 +37,15 @@ services:
       - ./wait-for-it.sh:/tmp/wait-for-it.sh
     networks:
       - net
-    profiles: ["model-training", "workflow-orchestration", "simulation", "all"]
+    profiles:
+      [
+        "ingestion",
+        "training-manual",
+        "training-workflow",
+        "workflow-orchestration",
+        "simulation",
+        "all",
+      ]
 
   # This service runs the postgres DB used by dagster for run storage, schedule storage,
   # and event log storage.
@@ -50,7 +59,7 @@ services:
       - dagster-storage-volume:/var/lib/postgresql/data
     networks:
       - net
-    profiles: ["workflow-orchestration", "simulation", "all"]
+    profiles: ["ingestion", "training-workflow", "simulation", "all"]
 
   # This service runs dagit, which loads your user code from the user code container.
   # Since our instance uses the QueuedRunCoordinator, any runs submitted from dagit will be put on
@@ -89,7 +98,7 @@ services:
     depends_on:
       - dagster_storage
       - minio
-    profiles: ["workflow-orchestration", "simulation", "all"]
+    profiles: ["ingestion", "training-workflow", "simulation", "all"]
 
   # This service runs the dagster-daemon process, which is responsible for taking runs
   # off of the queue and launching them, as well as creating runs from schedules or sensors.
@@ -119,7 +128,7 @@ services:
     depends_on:
       - dagster_storage
       - minio
-    profiles: ["workflow-orchestration", "simulation", "all"]
+    profiles: ["ingestion", "training-workflow", "simulation", "all"]
 
   training-jupyterlab:
     build:
@@ -145,7 +154,7 @@ services:
     entrypoint: start-notebook.sh --NotebookApp.token="" --NotebookApp.notebook_dir=/home/jovyan/work
     networks:
       - net
-    profiles: ["model-training", "all"]
+    profiles: ["training-manual", "all"]
 
   mlflow_db:
     restart: always
@@ -183,7 +192,7 @@ services:
       - net
     depends_on:
       - minio
-    profiles: ["model-training", "workflow-orchestration", "simulation", "all"]
+    profiles: ["training-manual", "training-workflow", "simulation", "all"]
 
   training-dagster:
     build:
@@ -216,7 +225,7 @@ services:
       MLFLOW_S3_ENDPOINT_URL: "http://minio:9000"
     networks:
       - net
-    profiles: ["workflow-orchestration", "all"]
+    profiles: ["training-workflow", "all"]
 
   deployed-model:
     build:
