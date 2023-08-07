@@ -82,7 +82,9 @@ make training-manual
 ```
 
 Start _Jupyter server_ and _Mlflow_ in the background.
-Run training notebook and verify experiments and model artifacts are logged to MLFlow.
+Run training notebook and verify experiments and model artifacts are logged to MLFlow. For training,
+all data available up to `SIMULATION_START_DATE` are used, all events beyond this date are considered
+to occur in future.
 
 When running, find the following instances:
 
@@ -104,7 +106,6 @@ and log the model to _MLflow_.
 When running, find the following instances:
 
 dagster UI: http://0.0.0.0:3000/locations/model-training-using-workflow/asset-groups/model_training
-dagster runs: http://0.0.0.0:3000/runs
 MLFlow UI: http://0.0.0.0:5000
 
 ### 4. Simulation
@@ -116,10 +117,34 @@ registered, specify existing `<your-trained-model-version>`.
 make simulation MODEL_VERSION=<your-trained-model-version>
 ```
 
+#### 4.1 Simulation workflow
+
 Model simulation workflows available in _dagster_UI_. Workflow is scheduled to run every `EVAL_SCHEDULER_INCREMENT`
-minute, refreshing the relevant assets continuously. However, first starting _simulation_ you need to changed the
-switch to _"Auto-materialize on"_ in _dagster UI_. Assets in simulation mode are materialized to [PostgreSQL](https://www.postgresql.org/)
-database _inference_db_, which can be accessed using [Adminer](https://www.adminer.org/)
+minute, refreshing the relevant assets continuously. However, first starting _simulation_ you need to flip the toggle to
+_"Auto-materialize on"_ in _dagster UI_. Assets in simulation mode are materialized to [PostgreSQL](https://www.postgresql.org/)
+database _inference_db_, which can be accessed using [Adminer](https://www.adminer.org/).
+
+dagster UI: http://0.0.0.0:3000/locations/model-application-simulation/asset-groups/recent
+Adminer: http://0.0.0.0:8080 (username: _postgres_user_, password: _postgres_password_)
+
+#### 4.2 Model inference
+
+As part of the simulation, an _model inference web server_ is exposed using [FastAPI](https://fastapi.tiangolo.com/).
+It is directly requested in one workflow step, but you can also play around with it. It exposes a [Swagger UI](https://swagger.io/tools/swagger-ui/)
+making it easy to drop some requests. Both the exposeed endpoints `/predict` and `/info` provide complete IO examples for you the experiment
+without any further knowledge about the model json schema.
+
+Model inference App: http://0.0.0.0:8000/docs
+
+#### 4.3 Model monitoring
+
+For monitoring the model performance, we utilize [Evidently AI](https://www.evidentlyai.com/), which
+is the last workflow step running in the pipeline. The report output, which is continuously created,
+is persisted in the _inference_db_. A [Grafana}(https://grafana.com/) instance is configured to
+read reports from _inference_db_ and create dashboads also continuously updated.
+
+Grafana: http://0.0.0.0:3030 (username: _admin_, password: _admin_)
+Monitoring Dashboards: http://0.0.0.0:3030/d/efbeb80f-e16a-4e1c-ba98-8f5ff862dfcc/accidents-severity-predictions
 
 # Further documention
 
@@ -127,7 +152,3 @@ Take note of further documentation material:
 
 - Process & tooling documentation
 - Software architecture
-
-```
-
-```

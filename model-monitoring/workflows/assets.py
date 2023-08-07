@@ -22,36 +22,6 @@ accidents_vehicles_casualties_dataset = SourceAsset(
 )
 
 
-@asset(group_name="reference", io_manager_key="db_io_manager", compute_kind="postgres")
-def reference_accidents_dataset(
-    accidents_vehicles_casualties_dataset,
-) -> pandas.DataFrame:
-    """
-    Filter accidents associated with the training data. Only use a downsampled
-    datapoints to make evaluation with evidently applicable.
-    """
-
-    X = accidents_vehicles_casualties_dataset
-    X = X[X["date"] < pandas.to_datetime(settings.SIMULATION_START_DATE)]
-    X = X.sample(n=settings.REFERENCE_DATA_SIZE)
-
-    X.pop("target")
-
-    return X
-
-
-@asset(group_name="reference", io_manager_key="db_io_manager", compute_kind="postgres")
-def reference_accidents_predictions(reference_accidents_dataset) -> pandas.DataFrame:
-    """
-    For reference accident data request prediction from model.
-    """
-
-    logger = get_dagster_logger()
-    logger.info(f"Requestion predictions from {settings.PREDICT_URL}")
-
-    return make_prediction(reference_accidents_dataset)
-
-
 @asset(
     group_name="recent",
     io_manager_key="s3_io_manager",
@@ -84,6 +54,46 @@ def recent_interval_processor() -> pandas.Series:
     logger.info(processed.to_dict())
 
     return processed
+
+
+@asset(
+    group_name="reference",
+    io_manager_key="db_io_manager",
+    compute_kind="postgres",
+    auto_materialize_policy=AutoMaterializePolicy.eager(),
+)
+def reference_accidents_dataset(
+    accidents_vehicles_casualties_dataset,
+) -> pandas.DataFrame:
+    """
+    Filter accidents associated with the training data. Only use a downsampled
+    datapoints to make evaluation with evidently applicable.
+    """
+
+    X = accidents_vehicles_casualties_dataset
+    X = X[X["date"] < pandas.to_datetime(settings.SIMULATION_START_DATE)]
+    X = X.sample(n=settings.REFERENCE_DATA_SIZE)
+
+    X.pop("target")
+
+    return X
+
+
+@asset(
+    group_name="reference",
+    io_manager_key="db_io_manager",
+    compute_kind="postgres",
+    auto_materialize_policy=AutoMaterializePolicy.eager(),
+)
+def reference_accidents_predictions(reference_accidents_dataset) -> pandas.DataFrame:
+    """
+    For reference accident data request prediction from model.
+    """
+
+    logger = get_dagster_logger()
+    logger.info(f"Requestion predictions from {settings.PREDICT_URL}")
+
+    return make_prediction(reference_accidents_dataset)
 
 
 @asset(
