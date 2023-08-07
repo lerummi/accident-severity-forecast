@@ -1,6 +1,6 @@
 # Project accident-severity-forecast
 
-Create ML models to forecast the severity of accidents based on UK Road Safety Data
+Create ML models to forecast the severity of accidents based on the UK Road Safety Dataset.
 
 ## Introduction
 
@@ -30,11 +30,60 @@ The project is decomposed into different _scenarios_, that in real-world applica
 
 - **training-workflow**: Since we want to automatically run training by the workflow orchestrator, we make use of [dagstermill](https://docs.dagster.io/_apidocs/libraries/dagstermill), a dagster integration of [papermill](https://papermill.readthedocs.io/en/latest/) to run notebooks in a process while transfering parameters to the notebook. Doing so, you do not have to transfer the code created inside of training notebooks to particular module, and instead just connect the existing notebooks to the pipeline.
 
-- **simulation**: The simulation mode represents a real-world machine learning in production environment. Of course, for our use case the data is available on a yearly basis, so there is no data streaming process appliable. Instead we simulate continuously produced data from the already _ingested_ data and run the processing workflows on a minute-wise schedule. Of course, in the real-world scenario new events, i.e. accidents, occur on a daily basis, but I guess you do not want to wait for days testing the _simulation_ model, do you? :wink:
-  To overcome this, we provide a **time warp** mode, where a day is represented by few real-world seconds. Also the simulation start date is synthetic. Both the parameters `SECONDS_PER_DAY` and `SIMULATION_START_DATE`, respectively, can be configured by environment variables.
-  The simulation mode requires data **ingestion** and **training** to be completed.
+- **simulation**: The simulation mode represents a real-world machine learning in production environment. Of course, for our use case the data is available on a yearly basis, so there is no data streaming process applicable. Instead we simulate continuously produced data from the already _ingested_ data and run the processing workflows on a minute-wise schedule. In the real-world scenario new events, i.e. accidents, occur on a daily basis, but I guess you do not want to wait for days testing the _simulation_ model, do you? :wink:
+
+To overcome this, we provide a **time warp** mode, where a day is represented by few real-world seconds. Also the simulation start date is synthetic. Both the parameters `SECONDS_PER_DAY` and `SIMULATION_START_DATE`, respectively, can be configured by environment variables.
+
+The simulation workflows are orchestrated by [dagster](https://dagster.io/) including inference making, monitoring report creation and dashboard visualization using [Grafana](https://grafana.com/).
+
+The simulation mode requires data **ingestion** and **training** to be completed.
 
 ## Quickstart
+
+### Prerequisites
+
+In order to be able to use the project, the following requirements exist:
+
+- [make](https://www.gnu.org/software/make/) (for Windows check [this](https://stackoverflow.com/questions/32127524/how-to-install-and-use-make-in-windows))
+- [docker](https://docs.docker.com/get-docker/)
+- [docker-compose](https://docker-docs.netlify.app/compose/install/)
+- If you want to run unit-tests and use pre-commit, also [Poetry](https://python-poetry.org/docs/) alongside with [Python3.11](https://www.python.org/downloads/release/python-3114/) is required
+
+#### 0. Run unit-tests
+
+```
+make unit-test
+```
+
+The output will show test results including code coverage logged to the console.
+
+#### 1. Run data ingestion
+
+```
+make ingestion
+```
+
+Several containers are (built and) started. To manually start data ingestion, open [dagster UI](http://0.0.0.0:3000/asset-groups)
+in your browser. At the right hand side use _Materialize all_ and _Launch backfill_ the materialize the data sets to
+[minio](https://min.io/) environment that locally mimics an AWS S3 environment. It is also worth navigating to the [dagster runs](http://0.0.0.0:3000/runs)
+section providing detailed information on the run properties, e.g. logs and run performance.
+
+### 2. Manual training
+
+```
+make training-manual
+```
+
+Requires data ingestion completed. Start [Jupyter server](http://0.0.0.0:8888) and [MLFlow](http://0.0.0.0:5000) in the background.
+Run training notebook and verify experiments and model artifacts are logged to MLFlow.
+
+### 3. Training workflow
+
+```
+make training-workflow
+```
+
+Requires data ingestion completed.
 
 # Further documention
 
