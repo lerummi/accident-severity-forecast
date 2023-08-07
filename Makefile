@@ -29,7 +29,7 @@ pre-commit-install: ## set up the git hooks script
 
 
 ##@ Run all pre-commit hooks
-pre-commit: ## run pre-commit hook script
+pre-commit: ## run pre-commit hook script manuelly. This is just for testing cases, pre-commit automatically runs when 'git commit'
 	pre-commit run --all-files || (printf "\n\n\n" && git --no-pager diff --color=always)
 
 
