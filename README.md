@@ -154,5 +154,5 @@ Monitoring Dashboards: http://0.0.0.0:3030/d/efbeb80f-e16a-4e1c-ba98-8f5ff862dfc
 
 Take note of further documentation material:
 
-- Process & tooling documentation
-- Software architecture
+- [Decisions on tooling](./docs/decisions.md)
+- [Software architecture](./docs/architecture.md)
