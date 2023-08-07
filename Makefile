@@ -22,10 +22,10 @@ help: ## display this help
 	@printf "\n"
 
 ##@ Install pre-commit
-pre-commit-install: ## set up the git hooks script
+pre-commit-install: ## set up the git hooks script and install pylint
 	@pip install pre-commit
 	@pre-commit --version
-	@pre-commit install
+	@pip install pylint
 
 
 ##@ Run all pre-commit hooks
