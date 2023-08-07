@@ -6,26 +6,16 @@ Create ML models to forecast the severity of accidents based on UK Road Safety D
 
 This project is aiming to represent an end-to-end machine learning use case including
 
-- **Data ingestion**: Load (partitioned) data from the web and store it in datalake that mimics **AWS S3 service**.
-- **Model training**: Provide training environment for running training manually, i.e. in a **Jupyter** environment, as well as running by the workflow orchestrator. Also account for experiment tracking and model registration.
+- **Data ingestion**: Load (partitioned) data from the web and store it in datalake that mimics _AWS S3 service_.
+- **Model training**: Provide training environment for running training manually, i.e. in a _Jupyter_ environment, as well as running by the workflow orchestrator. Also account for experiment tracking and model registration.
 - **Model serving**: Creation of docker images and provision of an inference web server containing a prediction functionality.
 - **Model monitoring**: Continuous tracking of model performance and presentation in dashboards.
 
 ## Dataset
 
-The Road Safety Dataset, available on data.gov.uk, is a comprehensive collection of data related to road safety in the United Kingdom. This dataset is maintained by the Department for Transport, UK.
+The (UK Road Safety Dataset)[https://www.data.gov.uk/dataset/cb7ae6f0-4be6-4935-9277-47e5ce24a11f/road-safety-data], is a dataset maintained by the Department for Transport. It provides detailed data on personal injury road accidents in GB from 1979, the vehicles involved, and the resulting casualties. The dataset is divided into Accident, Casualty, and Vehicle information, offering insights into accident severity, environmental conditions, individual demographics, and vehicle details. This dataset is useful for road safety studies, accident analysis, prevention measures, and machine learning model development.
 
-The dataset provides detailed information about the circumstances of personal injury road accidents in GB from 1979, the types of vehicles involved, and the consequential casualties. The statistics relate only to personal injury accidents on public roads that are reported to the police and subsequently recorded, using the STATS19 accident reporting form.
-
-The dataset is divided into three main sections:
-
-- **Accident Information**: This includes details about the severity of the accident, number of vehicles involved, date, time, location, and other environmental conditions.
-
-- **Casualty Information**: This section provides data about the individuals involved in the accident, including age, gender, type of road user, and the severity of their injuries.
-
-- **Vehicle Information**: This part of the dataset includes information about the vehicles involved in the accident, such as the type of vehicle, the manoeuvre the vehicle was performing at the time of the accident, and the age and gender of the driver.
-
-This dataset is a valuable resource for anyone interested in studying road safety, accident analysis, and prevention measures. It can also be used to develop machine learning models for predicting accident severity based on various factors.
+For our project, we utilize data starting from 2016, which contains accident-specific characteristics. This data is suitable for training a machine learning model that may have the potential to be used within a live service to indicate dangerous traffic situations. For this _POC_ project, for the sake of simplicity, we will stick to a _batch_ mode for deployment and monitoring.
 
 ## Project outline
 
