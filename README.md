@@ -110,9 +110,9 @@ MLFlow UI: http://0.0.0.0:5000
 ### 4. Simulation
 
 Requires model training (manual or via workflow) completed. Given, in _MLflow_ a model _accident_severity_
-registered, specify existing _<your-trained-model-version>_.
+registered, specify existing `<your-trained-model-version>`.
 
-````
+```
 make simulation MODEL_VERSION=<your-trained-model-version>
 ```
 
@@ -121,13 +121,13 @@ minute, refreshing the relevant assets continuously. However, first starting _si
 switch to _"Auto-materialize on"_ in _dagster UI_. Assets in simulation mode are materialized to [PostgreSQL](https://www.postgresql.org/)
 database _inference_db_, which can be accessed using [Adminer](https://www.adminer.org/)
 
-
-
-
 # Further documention
 
 Take note of further documentation material:
 
 - Process & tooling documentation
 - Software architecture
-````
+
+```
+
+```
