@@ -168,6 +168,7 @@ services:
       - net
     volumes:
       - mlflow_dbdata:/var/lib/mysql
+    profiles: ["training-manual", "training-workflow", "simulation", "all"]
 
   mlflow:
     build:

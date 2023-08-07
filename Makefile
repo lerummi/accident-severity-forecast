@@ -60,7 +60,7 @@ training-manual: ## Run manual training mode. Provide jupyter environment to car
 
 ##@ Run workflow training mode
 training-workflow: ## Run workflow training mode. Training notebook is executed by the workflow orchestrator
-	$(MAKE) run-compose CARGS="--profile training-workflow:"
+	$(MAKE) run-compose CARGS="--profile training-workflow"
 
 ##@ Run simulation mode
 simulation: SECONDS_PER_DAY?=10

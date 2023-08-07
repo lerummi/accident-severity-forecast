@@ -63,27 +63,66 @@ The output will show test results including code coverage logged to the console.
 make ingestion
 ```
 
-Several containers are (built and) started. To manually start data ingestion, open [dagster UI](http://0.0.0.0:3000/asset-groups)
-in your browser. At the right hand side use _Materialize all_ and _Launch backfill_ the materialize the data sets to
-[minio](https://min.io/) environment that locally mimics an AWS S3 environment. It is also worth navigating to the [dagster runs](http://0.0.0.0:3000/runs)
+Several containers are (built and) started. To manually start data ingestion, open _dagster UI_
+in your browser. At the right hand side use _Materialize all_ and _Launch backfill_ the materialize the data assets to
+[minio](https://min.io/) environment that locally mimics an AWS S3 environment. It is also worth navigating to the _dagster runs_
 section providing detailed information on the run properties, e.g. logs and run performance.
 
+When running, find the following instances:
+
+dagster UI: http://0.0.0.0:3000/asset-groups
+dagster runs: http://0.0.0.0:3000/runs
+
 ### 2. Manual training
+
+Requires data ingestion completed.
 
 ```
 make training-manual
 ```
 
-Requires data ingestion completed. Start [Jupyter server](http://0.0.0.0:8888) and [MLFlow](http://0.0.0.0:5000) in the background.
+Start _Jupyter server_ and _Mlflow_ in the background.
 Run training notebook and verify experiments and model artifacts are logged to MLFlow.
 
+When running, find the following instances:
+
+Jupyter server: http://0.0.0.0:8888
+MLFlow UI: http://0.0.0.0:5000
+
 ### 3. Training workflow
+
+Requires data ingestion completed.
 
 ```
 make training-workflow
 ```
 
-Requires data ingestion completed.
+To manually start a training job, open _dagster UI_ in your browser.
+Again use _"Materialize all"_ and _"Launch backfill"_ the materialize the data assets, i.e. run an experiment
+and log the model to _MLflow_.
+
+When running, find the following instances:
+
+dagster UI: http://0.0.0.0:3000/locations/model-training-using-workflow/asset-groups/model_training
+dagster runs: http://0.0.0.0:3000/runs
+MLFlow UI: http://0.0.0.0:5000
+
+### 4. Simulation
+
+Requires model training (manual or via workflow) completed. Given, in _MLflow_ a model _accident_severity_
+registered, specify existing _<your-trained-model-version>_.
+
+````
+make simulation MODEL_VERSION=<your-trained-model-version>
+```
+
+Model simulation workflows available in _dagster_UI_. Workflow is scheduled to run every `EVAL_SCHEDULER_INCREMENT`
+minute, refreshing the relevant assets continuously. However, first starting _simulation_ you need to changed the
+switch to _"Auto-materialize on"_ in _dagster UI_. Assets in simulation mode are materialized to [PostgreSQL](https://www.postgresql.org/)
+database _inference_db_, which can be accessed using [Adminer](https://www.adminer.org/)
+
+
+
 
 # Further documention
 
@@ -91,3 +130,4 @@ Take note of further documentation material:
 
 - Process & tooling documentation
 - Software architecture
+````
